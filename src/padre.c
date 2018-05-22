@@ -21,8 +21,7 @@ void* attach_segments(int key, int shm_size);
 void detach_segments(struct shmid_ds shmid_struct, int shm_size, int key);
 int load_file(char* shm_write, int file_descriptor_input);
 // int check_keys(char *shm_address1, char * shm_address2, int counter);
-// void save_keys(char *shm_address, int counter, int file_descriptor_output);
-// char *hexadecimal_convertion(char *shm_read);
+void save_keys(char *shm_address, int file_descriptor_output);
 
 void padre(char *file_name_input, char *file_name_output){
 
@@ -175,6 +174,8 @@ void padre(char *file_name_input, char *file_name_output){
         wait(NULL);
         //sleep(10);
 
+        save_keys(s2, file_descriptor_output);
+
 
         // int correct_keys = check_keys(shm_address1, shm_address2, line_counter);
         // if(correct_keys == 1){
@@ -275,5 +276,95 @@ int load_file(char* shm_write, int file_descriptor){
     *shm_write = '\0';
 
     return counter;
+
+}
+
+
+void save_keys(char* shm_address, int file_descriptor){
+
+    char* shm_read;
+    char* hexa;
+
+    for(shm_read = shm_address; *shm_read != '\0'; shm_read++){
+
+        if(*shm_read != '\n'){
+            unsigned int numero = (unsigned int) *shm_read;
+            unsigned int val;
+            char stringa[2];
+            int i;
+
+            for(i = 0; numero != 0; i++){
+
+                val = numero % 16;
+                numero = numero / 16;
+                switch(val){
+                    case 1:
+                        stringa[i] = '1';
+                        break;
+                    case 2:
+                        stringa[i] = '2';
+                        break;
+                    case 3:
+                        stringa[i] = '3';
+                        break;
+                    case 4:
+                        stringa[i] = '4';
+                        break;
+                    case 5:
+                        stringa[i] = '5';
+                        break;
+                    case 6:
+                        stringa[i] = '6';
+                        break;
+                    case 7:
+                        stringa[i] = '7';
+                        break;
+                    case 8:
+                        stringa[i] = '8';
+                        break;
+                    case 9:
+                        stringa[i] = '9';
+                        break;      
+                    case 10:
+                        stringa[i] = 'A';
+                        break;
+                    case 11:
+                        stringa[i] = 'B';
+                        break;
+                    case 12:
+                        stringa[i] = 'C';
+                        break;
+                    case 13:
+                        stringa[i] = 'D';
+                        break;
+                    case 14:
+                        stringa[i] = 'E';
+                        break;
+                    case 15:
+                        stringa[i] = 'F';
+                        break;          
+                    default:
+                        stringa[i] = '0';
+                        break;
+                }
+            }
+            char conv[2];
+            int a;
+            for(a = 0; i > 0; i--, a++){
+                conv[i - 1] = stringa[a];
+            }
+            if(write(file_descriptor, conv, 2) == -1){
+                perror("Write error");
+                exit(1);
+            }
+        }
+        else{        
+            if(write(file_descriptor, shm_read, 1) == -1){
+                perror("Write error");
+                exit(1);
+            }
+        }
+        
+    }
 
 }

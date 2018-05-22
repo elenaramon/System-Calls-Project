@@ -20,8 +20,8 @@
 
 
 char* load_string(int line, int my_string);
-void lock();
-void unlock();
+void lock(int sem_num);
+void unlock(int sem_num);
 char* find_key();
 void send_timeelapsed();
 // int save_key();    -> ritorna se il salvataggio è andato a buon fine
@@ -89,7 +89,7 @@ void nipote(int shm_size, int line){
 
 
      while(1)   {
-        lock();
+        lock(0);
 
         my_string = status->id_string;
 
@@ -99,7 +99,7 @@ void nipote(int shm_size, int line){
             kill(getppid(), SIGUSR1);
             sleep(1);
             
-            unlock();
+            unlock(0);
 
             char* stringa = load_string(line, my_string);
 
@@ -108,37 +108,43 @@ void nipote(int shm_size, int line){
             char* key = (char*) malloc(sizeof(int));
 
             // char* key = find_key();
-            int i = 0;
-            switch(i){
+
+            switch(my_string){
                 case 0:
-                    key = "zero";
+                    key = "abcd";
                     break;
                 case 1:
-                    key = "nove";
+                    key = "efgh";
                     break;
                 case 2:
-                    key = "otto";
+                    key = "iklm";
                     break;
                 case 3:
-                    key = "sette";
+                    key = "nopq";
                     break;
             }
+
+            lock(1);
+            printf("Sono dentro %i - %i\n", getpid(), my_string);
+            printf("%s\n", key);
             save_key(key, my_string);
+            unlock(1);
+            
             
         }
         else{
-            unlock();
+            unlock(0);
             break;
         }
      }
 
 }
 
-void lock(){
+void lock(int sem_num){
 
     struct sembuf op;
 
-    op.sem_num = 0;
+    op.sem_num = sem_num;
     op.sem_op = -1;
     op.sem_flg = 0;
 
@@ -152,10 +158,10 @@ void lock(){
      */
 }
 
-void unlock(){
+void unlock(int sem_num){
 
     struct sembuf op;
-    op.sem_num = 0;
+    op.sem_num = sem_num;
     op.sem_op = 1;          
     op.sem_flg = 0;         
 
@@ -177,7 +183,8 @@ char* load_string(int line, int my_string){
     int count = 0;
     char *buffer = (char*) malloc(sizeof(char*) * 1030);
     int i;
-    char *read = (char*)s1 + sizeof(struct Status);
+    char *read;
+    //  = (char*)s1 + sizeof(struct Status);
 
     for(read = (char*)s1 + sizeof(struct Status); *read != '\0'; read++){
 
@@ -199,6 +206,23 @@ char* load_string(int line, int my_string){
 
 void save_key(char* key, int my_string){
 
-    
+    char *write;
+    int count = 0;
+    //  = (char*) s2;
+    for(write = (char*)s2; *write != '\0'; write++){
+        if(count == my_string){
+            break;
+        }
+        else
+        {
+            if(*write == '\n'){
+                count++;
+            }
+        }
+    }
+    for( ; *key != '\0'; write++, key++){
+        *write = *key;
+    }
+    *write++ = '\n';
 
 }

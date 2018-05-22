@@ -67,12 +67,12 @@ void figlio(int shm_size, int line){
         printf("FIGLIO: Creazione del semaforo\n");
     */
 
-    if((sem_id = semget(KEY_SEM, 1, (0666 | IPC_CREAT | IPC_EXCL))) < 0){
+    if((sem_id = semget(KEY_SEM, 2, (0666 | IPC_CREAT | IPC_EXCL))) < 0){
         perror("FIGLIO: Semaphore creation error");
         exit(1);
     }
 
-    // inizializzazione del semaforo a 1 : MUTEX
+    // inizializzazione di semafori a 1 : MUTEX
    /*  // AREA DEBUG
         printf("FIGLIO: Settiamo il semaforo a 1, mutua esclusione\n");
      */
@@ -81,6 +81,10 @@ void figlio(int shm_size, int line){
         perror ("Semaforo PADRE non inizializzato.\n");
         exit(1);
     }    
+    if (semctl(sem_id, 1, SETVAL, sem_arg) == -1) {
+        perror ("Semaforo PADRE non inizializzato.\n");
+        exit(1);
+    }  
         
 
     /* 

@@ -8,6 +8,7 @@ CC := gcc
 all: $(PROJECT)
 
 $(PROJECT): $(OBJ)
+	mkdir -p bin
 	$(CC) -o $(PROJECT) $(OBJ)
 
 ./build/main.o: ./src/main.c ./include/padre.h ./include/types.h
