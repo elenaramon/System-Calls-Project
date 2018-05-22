@@ -10,7 +10,7 @@ all: $(PROJECT)
 $(PROJECT): $(OBJ)
 	$(CC) -o $(PROJECT) $(OBJ)
 
-./obj/main.o: main.c ./h/from_int_to_string.h ./h/string_length.h ./h/concat_string.h
+./obj/main.o: main.c ./h/from_int_to_string.h ./h/string_length.h ./h/concat_string.h ./h/copy_string.h
 	mkdir -p obj
 	$(CC) $(CFLAGS) $< -o $@
 
@@ -23,6 +23,10 @@ $(PROJECT): $(OBJ)
 	$(CC) $(CFLAGS) $< -o $@
 
 ./obj/string_length.o: string_length.c ./h/string_length.h
+	mkdir -p obj
+	$(CC) $(CFLAGS) $< -o $@
+
+./obj/copy_string.o: copy_string.c ./h/copy_string.h
 	mkdir -p obj
 	$(CC) $(CFLAGS) $< -o $@
 
