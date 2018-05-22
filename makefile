@@ -1,4 +1,4 @@
-PROJECT := bin/key_finder
+PROJECT := build/key_finder
 SRC := $(wildcard src/*.c)
 OBJ := $(SRC:src/%.c=build/%.o)
 LD := gcc
@@ -19,7 +19,7 @@ $(PROJECT): $(OBJ)
 	mkdir -p build
 	$(CC) $(CFLAGS) $< -o $@
 
-./build/padre.o: ./src/padre.c ./include/padre.h ./include/logger.h
+./build/padre.o: ./src/padre.c ./include/padre.h ./include/types.h
 	mkdir -p build
 	$(CC) $(CFLAGS) $< -o $@
 
@@ -28,6 +28,10 @@ $(PROJECT): $(OBJ)
 	$(CC) $(CFLAGS) $< -o $@
 
 ./build/nipote.o: ./src/nipote.c ./include/nipote.h ./include/types.h
+	mkdir -p build
+	$(CC) $(CFLAGS) $< -o $@
+
+./build/utilities.o: ./src/utilities.c ./include/utilities.h
 	mkdir -p build
 	$(CC) $(CFLAGS) $< -o $@
 
