@@ -14,9 +14,10 @@
 #include "../include/types.h"
 #include "../include/nipote.h"
 
-#define KEY_SEM 78
 #define KEY_SHM 75
 #define KEY_SHM2 76
+#define KEY_MSQ 77
+#define KEY_SEM 78
 
 
 char* load_string(int line, int my_string);
@@ -24,7 +25,6 @@ void lock(int sem_num);
 void unlock(int sem_num);
 char* find_key();
 void send_timeelapsed();
-// int save_key();    -> ritorna se il salvataggio è andato a buon fine
 void save_key(char * key, int my_string);
 
 union semun{
@@ -35,18 +35,22 @@ union semun{
 } sem_arg;
 
 int sem_id;
-
 struct Status *status;
-
 void *s1;
-
 void *s2;
+int msq_id;
 
 void nipote(int shm_size, int line){
 
     int my_string;
     int shm_id;
     int shm_id2;
+
+    if((msq_id = msgget(KEY_MSQ, 0666| IPC_CREAT)) < 0){
+        printf("NIPOTE: %i", getpid());
+        perror("Message queue access error");
+        exit(1);
+    }
 
     if((sem_id = semget(KEY_SEM, 0, (0666 | IPC_CREAT))) < 0){
         printf("NIPOTE: %i", getpid());
@@ -87,7 +91,6 @@ void nipote(int shm_size, int line){
         printf("NIPOTE %i: Provo ad accedere al semaforo\n", getpid());
      */
 
-
      while(1)   {
         lock(0);
 
@@ -102,8 +105,6 @@ void nipote(int shm_size, int line){
             unlock(0);
 
             char* stringa = load_string(line, my_string);
-
-            printf("%s\n", stringa);
 
             char* key = (char*) malloc(sizeof(int));
 
@@ -125,11 +126,10 @@ void nipote(int shm_size, int line){
             }
 
             lock(1);
-            printf("Sono dentro %i - %i\n", getpid(), my_string);
-            printf("%s\n", key);
             save_key(key, my_string);
             unlock(1);
             
+            send_timeelapsed();
             
         }
         else{
@@ -224,5 +224,22 @@ void save_key(char* key, int my_string){
         *write = *key;
     }
     *write++ = '\n';
+
+}
+
+void send_timeelapsed(){
+
+    /* // AREA DEBUG
+    printf("NIPOTE %i: Invio il messaggio\n", getpid());
+     */
+    struct Message Msg;
+    int size = sizeof(Msg) - sizeof(long);
+    // SE CAMBI MESSGGIO CAMBIA ANCHE LA DIMENSIONE DELLA WRITE IN LOGGER
+    strcpy(Msg.text, "chiave trovata in BLA BLA\0");
+    Msg.mtype = 2;
+    if((msgsnd(msq_id, &Msg, size, 0)) == -1){
+        perror("FIGLIO: Message queue sending error");
+        exit(1);
+    }
 
 }

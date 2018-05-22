@@ -122,9 +122,9 @@ void figlio(int shm_size, int line){
     else if(son_nipote1 == 0 && son_nipote2 != 0){
         
         // esecuzione son_nipote1
-        // AREA DEBUG
+        /* // AREA DEBUG
             printf("FIGLIO:  Ciao sono il figlio nipote1 %i, mio padre è %i\n", getpid(), getppid());
-
+         */
         nipote(shm_size, line);
         
         exit(0);
@@ -132,9 +132,9 @@ void figlio(int shm_size, int line){
     else if(son_nipote1 != 0 && son_nipote2 == 0){
         
         // esecuzione son_nipote2
-        // AREA DEBUG
+        /* // AREA DEBUG
             printf("FIGLIO:  Ciao sono il figlio nipote2 %i, mio padre è %i\n", getpid(), getppid());
-
+         */
         nipote(shm_size, line);
         
         exit(0);
@@ -200,7 +200,7 @@ void send_terminate(int msq_id){
     struct Message Msg;
     int size = sizeof(Msg) - sizeof(long);
     // SE CAMBI MESSGGIO CAMBIA ANCHE LA DIMENSIONE DELLA WRITE IN LOGGER
-    strcpy(Msg.text, "ricerca conclusa");
+    strcpy(Msg.text, "ricerca conclusa\0");
     Msg.mtype = 1;
     if((msgsnd(msq_id, &Msg, size, 0)) == -1){
         perror("FIGLIO: Message queue sending error");

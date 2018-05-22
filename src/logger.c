@@ -90,9 +90,11 @@ int polling_receive(int msq_id, struct msqid_ds buf){
             printf("LOGGER: Ci sono dei messaggi\n");
         */
         size = sizeof(Msg) - sizeof(long);
-        msgrcv(msq_id, &Msg, size, 1, 0);
+        msgrcv(msq_id, &Msg, size, 0, 0);
+
         message_size = sizeof(Msg.text);
-        write(1, Msg.text, 16);
+        write(1, Msg.text, message_size);
+
         if(Msg.mtype == 1){
             /* // AREA DEBUG
                 printf("LOGGER: Un messaggio è di fine\n");
@@ -109,8 +111,8 @@ int polling_receive(int msq_id, struct msqid_ds buf){
         /* // AREA DEBUG
         else{
             printf("LOGGER: Tutto ok, %d\n", (int)buf.msg_qnum);
-        }
-         */
+        } */
+        
     }while((controll == 1 && ((int)buf.msg_qnum) > 0) || (controll == 0));
 
     return controll;
