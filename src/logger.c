@@ -8,20 +8,13 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <ctype.h>
-#include <string.h>
 #include "../include/logger.h"
 #include "../include/types.h"
+#include "../include/utilities.h"
 
 #define KEY_MSG 77
 
-int polling_receive(int msq_id, struct msqid_ds buf);
-
-
-
 struct Status *status;
-
-
-
 
 void logger(){
 
@@ -34,24 +27,14 @@ void logger(){
     struct msqid_ds buf;
     int end_signal = 0;
 
-    /* // AREA DEBUG
-        printf("LOGGER: Creazione della coda di messaggi\n");
-    */
+
     if((msq_id = msgget(KEY_MSG, (0666 | IPC_CREAT))) < 0){
         perror("LOGGER: Message queue creation error");
         exit(1);
     }
 
-    /*// AREA DEBUG
-        printf("LOGGER: logger %i\n", msq_id);
-
-        printf("LOGGER: Dorme un secondo\n");
-    */
 
     sleep(1);
-    /* // AREA DEBUG
-        printf("LOGGER: Si è svegliato\n");
-     */
 
 
     end_signal = polling_receive(msq_id, buf);
@@ -86,14 +69,17 @@ int polling_receive(int msq_id, struct msqid_ds buf){
     int controll = 0;
 
     do{
-        /* // AREA DEBUG
+       /*  // AREA DEBUG
             printf("LOGGER: Ci sono dei messaggi\n");
         */
         size = sizeof(Msg) - sizeof(long);
-        msgrcv(msq_id, &Msg, size, 0, 0);
+        if(msgrcv(msq_id, &Msg, size, 0, 0) == -1){
+            perror("Error");
+            exit(1);
+        }
 
         message_size = sizeof(Msg.text);
-        write(1, Msg.text, message_size);
+        printing(Msg.text);
 
         if(Msg.mtype == 1){
             /* // AREA DEBUG
@@ -101,7 +87,6 @@ int polling_receive(int msq_id, struct msqid_ds buf){
             */
             controll = 1;
         }
-        printf("\n");
 
 
         if(msgctl(msq_id, IPC_STAT, &buf) == -1){

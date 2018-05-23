@@ -10,19 +10,20 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <ctype.h>
-#include <string.h>
 #include "../include/figlio.h"
 #include "../include/types.h"
 #include "../include/nipote.h"
+#include "../include/utilities.h"
+
+
+#include <string.h>
 
 #define KEY_SHM 75
 #define KEY_MSG 77
 #define KEY_SEM 78
 
-void status_update(int s);
-void send_terminate(int msq_id);
-
 struct Status* status;
+int msq_id;
 
 union semun{
     int val;
@@ -31,85 +32,59 @@ union semun{
     struct seminfo *__buf;
 };
 
-
 void figlio(int shm_size, int line){
 
     int shm_id;
     void * s1;
+    pid_t son_nipote1, son_nipote2;
+    union semun sem_arg;
+    int sem_id;
 
-
-    /* // AREA DEBUG
-        printf("FIGLIO: Creo la zona di memoria condivisa\n");
-     */
+    // Accedo alla zona di memoria
     if((shm_id = shmget(KEY_SHM, shm_size, 0666)) < 0){
         perror("Opening shared memory error");
         exit(1);
     }
-
-    // attacco il segmento di memoria condivisa appena creato alla zona di memoria del processo
-    /* // AREA DEBUG
-        printf("FIGLIO: Attacco il segmento\n");
-    */
+    // Mi attacco alla zona di memoria
     if((s1 = shmat(shm_id, NULL, 0)) == (void *)-1){
         perror("FIGLIO: Shared memory attachment error");
         exit(1);
     }
     status = (struct Status*) s1;
 
+    // Mi registro per ricevere il segnale SIGUSR1
     signal(SIGUSR1, status_update);
 
-    pid_t son_nipote1, son_nipote2;
-    union semun sem_arg;
-    int sem_id;
-
-    /*
-    // AREA DEBUG
-        printf("FIGLIO: Creazione del semaforo\n");
-    */
-
+    // Creo i semafori di mutua esclusione
     if((sem_id = semget(KEY_SEM, 2, (0666 | IPC_CREAT | IPC_EXCL))) < 0){
         perror("FIGLIO: Semaphore creation error");
         exit(1);
     }
 
-    // inizializzazione di semafori a 1 : MUTEX
-   /*  // AREA DEBUG
-        printf("FIGLIO: Settiamo il semaforo a 1, mutua esclusione\n");
-     */
+    // Inizializzo i semafori a 1
     sem_arg.val = 1;
     if (semctl(sem_id, 0, SETVAL, sem_arg) == -1) {
-        perror ("Semaforo PADRE non inizializzato.\n");
+        perror ("FIGLIO: Semaphore initialization");
         exit(1);
     }    
     if (semctl(sem_id, 1, SETVAL, sem_arg) == -1) {
-        perror ("Semaforo PADRE non inizializzato.\n");
+        perror ("FIGLIO: Semaphore initialization");
         exit(1);
     }  
-        
 
-    /* 
-    // AREA DEBUG
-      printf("FIGLIO: Accesso alla coda di messagi\n");
-    */
-
-    int msq_id;
+    // Accedo alla coda di messaggi
     if((msq_id = msgget(KEY_MSG, 0666| IPC_CREAT)) < 0){
         perror("FIGLIO: Message queue access error");
         exit(1);
     }
 
-
-    /* 
-    // AREA DEBUG
-        printf("FIGLIO: ID coda: %i\n", msq_id);
-     */
-
-
+    // Creo il nipote 1
     if((son_nipote1 = fork()) == -1){
         perror("FIGLIO: Nipote1 creation error");
         exit(1);
     }
 
+    // Creo il nipote 2
     if((son_nipote2 = fork()) == -1){
         perror("FIGLIO: Nipote2 creation error");
         exit(1);
@@ -120,94 +95,76 @@ void figlio(int shm_size, int line){
         exit(0);
     }
     else if(son_nipote1 == 0 && son_nipote2 != 0){
-        
-        // esecuzione son_nipote1
-        /* // AREA DEBUG
-            printf("FIGLIO:  Ciao sono il figlio nipote1 %i, mio padre è %i\n", getpid(), getppid());
-         */
+        // Esecuzione nipote 1
         nipote(shm_size, line);
         
-        exit(0);
+
     }
     else if(son_nipote1 != 0 && son_nipote2 == 0){
-        
-        // esecuzione son_nipote2
-        /* // AREA DEBUG
-            printf("FIGLIO:  Ciao sono il figlio nipote2 %i, mio padre è %i\n", getpid(), getppid());
-         */
+        // Esecuzione nipote 2
         nipote(shm_size, line);
         
-        exit(0);
+
     }
     else{
-        /* 
-        // esecuzione del padre
-        // AREA DEBUG
-            printf("FIGLIO: Ciao sono il padre %i, mio padre è %i\n", getpid(), getppid());
-         */
+        // Esecuzione del padre
+
+
+        // Attende la terminazione dei figli
         wait(NULL);
         wait(NULL);
-        /* 
-        // AREA DEBUG
-            printf("FIGLIO: I figli sono terminati mando il messaggio a logger\n");
-        */
-            
+
+ 
+        // Manda un messaggio di terminazione al processo logger
         send_terminate(msq_id);
-        /*
-        // AREA DEBUG
-            printf("FIGLIO: Dormo 5 secondi\n");
 
-        sleep(5);
-        // AREA DEBUG
-            printf("FIGLIO: Mi sono svegliato\n");
-
-        // AREA DEBUG
-            printf("FIGLIO: Rimuovo il semaforo\n");
-        */
-
+        // Elimina i semafori
         sem_arg.val = 0;
         if(semctl(sem_id, 0, IPC_RMID, sem_arg) == -1){
             perror("FIGLIO: Remove semaphore error");
             exit(1);
-        }    
-        /* 
-        // AREA DEBUG
-            printf("FIGLIO: Semaforo rimosso, termino\n")   ;
-        */
+        }   
+        // sem_arg.val = 0;
+        // if(semctl(sem_id, 1, IPC_RMID, sem_arg) == -1){
+        //     perror("FIGLIO: Remove semaphore error");
+        //     exit(1);
+        // }  
     }
-
-
 }
 
 void status_update(int s){
 
+
     if(s == SIGUSR1){
 
-        printf("FIGLIO: grandson %i - ", status->grandson);
-        printf("FIGLIO: id_string %i\n", status->id_string);
+        char *messaggio_pt1 = concat_string("Il nipote ", from_int_to_string(status->grandson));
+        char *messaggio_pt2 = concat_string(messaggio_pt1, " sta analizzando la ");
+        char *messaggio_pt3 = concat_string(messaggio_pt2, from_int_to_string(status->id_string));
+        char *messaggio_pt4 = concat_string(messaggio_pt3, "-esima stringa.");
 
-        // write(1, "HELLO\n", 7);
+        // printf("FIGLIO: grandson %i - ", status->grandson);
+        // printf("FIGLIO: id_string %i\n", status->id_string);
+
+        int size = string_length(messaggio_pt4);
+
+        write(1, messaggio_pt4, size);
     }
 
 }
 
-void send_terminate(int msq_id){
+void send_terminate(){
 
-    /* // AREA DEBUG
-        printf("FIGLIO: Invio il messaggio a logger\n");
-    */
 
     struct Message Msg;
     int size = sizeof(Msg) - sizeof(long);
     // SE CAMBI MESSGGIO CAMBIA ANCHE LA DIMENSIONE DELLA WRITE IN LOGGER
-    strcpy(Msg.text, "ricerca conclusa\0");
+    char *messaggio = "ricerca conclusa";
+    copy_string(Msg.text, messaggio);
+    // strcpy(Msg.text, "ricerca conclusa\0");
     Msg.mtype = 1;
     if((msgsnd(msq_id, &Msg, size, 0)) == -1){
         perror("FIGLIO: Message queue sending error");
         exit(1);
     }
 
-    /* // AREA DEBUG
-        printf("FIGLIO: Messaggio inviato\n");
-    */
 }
