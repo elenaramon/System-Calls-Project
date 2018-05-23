@@ -24,6 +24,7 @@
 
 struct Status* status;
 int msq_id;
+int sem_id;
 
 union semun{
     int val;
@@ -38,7 +39,6 @@ void figlio(int shm_size, int line){
     void * s1;
     pid_t son_nipote1, son_nipote2;
     union semun sem_arg;
-    int sem_id;
 
     // Accedo alla zona di memoria
     if((shm_id = shmget(KEY_SHM, shm_size, 0666)) < 0){
@@ -56,7 +56,7 @@ void figlio(int shm_size, int line){
     signal(SIGUSR1, status_update);
 
     // Creo i semafori di mutua esclusione
-    if((sem_id = semget(KEY_SEM, 2, (0666 | IPC_CREAT | IPC_EXCL))) < 0){
+    if((sem_id = semget(KEY_SEM, 3, (0666 | IPC_CREAT | IPC_EXCL))) < 0){
         perror("FIGLIO: Semaphore creation error");
         exit(1);
     }
@@ -71,6 +71,10 @@ void figlio(int shm_size, int line){
         perror ("FIGLIO: Semaphore initialization");
         exit(1);
     }  
+    if (semctl(sem_id, 2, SETVAL, sem_arg) == -1) {
+        perror ("FIGLIO: Semaphore initialization");
+        exit(1);
+    } 
 
     // Accedo alla coda di messaggi
     if((msq_id = msgget(KEY_MSG, 0666| IPC_CREAT)) < 0){
@@ -137,19 +141,32 @@ void status_update(int s){
 
     if(s == SIGUSR1){
 
-        char *messaggio_pt1 = concat_string("Il nipote ", from_int_to_string(status->grandson));
-        char *messaggio_pt2 = concat_string(messaggio_pt1, " sta analizzando la ");
-        char *messaggio_pt3 = concat_string(messaggio_pt2, from_int_to_string(status->id_string));
-        char *messaggio_pt4 = concat_string(messaggio_pt3, "-esima stringa.");
+        char *messaggio = concat_string("Il nipote ", from_int_to_string(status->grandson));
+        messaggio = concat_string(messaggio, " sta analizzando la ");
+        messaggio = concat_string(messaggio, from_int_to_string(status->id_string));
+        messaggio = concat_string(messaggio, "-esima stringa.");
 
-        // printf("FIGLIO: grandson %i - ", status->grandson);
-        // printf("FIGLIO: id_string %i\n", status->id_string);
+        int size = string_length(messaggio);
 
-        int size = string_length(messaggio_pt4);
-
-        write(1, messaggio_pt4, size);
+        printing(messaggio);
     }
+    unlock1(2);
 
+}
+
+
+void unlock1(int sem_num){
+
+    struct sembuf op;
+    op.sem_num = sem_num;
+    op.sem_op = 1;          
+    op.sem_flg = 0;         
+
+    if (semop(sem_id, &op, 1) == -1) { 
+        perror("Semaphore unlock operation error");
+        exit(1);
+    }
+    
 }
 
 void send_terminate(){

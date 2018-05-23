@@ -87,11 +87,12 @@ void nipote(int shm_size, int line){
         if(my_string != line){
             status->grandson = getpid();
             status->id_string = status->id_string + 1;
+            lock(2);
             kill(getppid(), SIGUSR1);
-            
-            unlock(0);
 
             char* stringa = load_string(line, my_string);
+
+            unlock(0);
 
             char* key = (char*) malloc(sizeof(int));
 
@@ -207,12 +208,15 @@ void save_key(char* key, int my_string){
 
 }
 
+
+
 void send_timeelapsed(){
 
     struct Message Msg;
     int size = sizeof(Msg) - sizeof(long);
     // SE CAMBI MESSGGIO CAMBIA ANCHE LA DIMENSIONE DELLA WRITE IN LOGGER
-    copy_string(Msg.text, "chiave trovata in BLA\0");
+    char *messaggio = concat_string("chiave trovata in ", from_int_to_string(10));
+    copy_string(Msg.text, messaggio);
     // strcpy(Msg.text, "chiave trovata in BLA BLA\0");
     Msg.mtype = 2;
     if((msgsnd(msq_id, &Msg, size, 0)) == -1){

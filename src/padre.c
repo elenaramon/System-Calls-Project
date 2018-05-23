@@ -198,6 +198,8 @@ int load_file(char* shm_write, int file_descriptor){
     // inserimento di un carattere per il riconoscimento della fine del file
     *shm_write = '\0';
 
+    close(file_descriptor);
+
     return counter;
 
 }
@@ -288,5 +290,7 @@ void save_keys(char* shm_address, int file_descriptor){
         }
         
     }
+
+    close(file_descriptor);
 
 }

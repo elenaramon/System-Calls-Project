@@ -27,6 +27,7 @@ char* from_int_to_string(int numero){
     int i = 0;
     for(i = cifre - 1; i >= 0; i-- ){
         new_string[i] = (char) (numero % 10) + '0';
+        numero = numero/10;
     }
     new_string[i] = '\0';
 
@@ -36,10 +37,11 @@ char* from_int_to_string(int numero){
 void copy_string(char *stringa1, char* stringa2){
 
     int i;
-    for(i = 0; stringa2[i] != '\0'; i++){
-        stringa1[i] = stringa2[i];
+    for(i = 0; *stringa2 != '\0'; stringa1++, stringa2++, i++){
+        *stringa1 = *stringa2;
     }
-    stringa1[i] = '\0';
+    i++;
+    *stringa1++ = '\0';
 
 }
 
@@ -69,8 +71,8 @@ char* concat_string(char* stringa1, char* stringa2){
 void printing(char *stringa){
     int i = 0;
     for( ; stringa[i] != '\0'; i++);
-
     stringa[i] = '\n';
+    i++;
     write(1, stringa, i);
 }
 
