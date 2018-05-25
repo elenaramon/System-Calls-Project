@@ -19,9 +19,6 @@ install:
 	mkdir -p bin
 	cp $(PROJECT) bin/
 
-clean:
-	rm $(OBJ) $(PROJECT)
-
 help:
 	@echo all: compiles all files
 	@echo install: installs application at right place
@@ -30,6 +27,9 @@ help:
 
 doc:
 	doxygen doxygen.cfg
+
+clean:
+	rm $(OBJ) $(PROJECT)
 	
 
-	.PHONY clean all install
+.PHONY: all clean install

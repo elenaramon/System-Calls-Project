@@ -99,7 +99,7 @@ void figlio(int shm_size, int line){
     else if(son_nipote1 != 0 && son_nipote2 == 0){
         // Esecuzione nipote 2
         id = 2;
-        nipote(shm_size, line, 2);
+        nipote(shm_size, line, id);
         
 
     }
@@ -107,23 +107,18 @@ void figlio(int shm_size, int line){
         // Esecuzione del padre
 
         // Attende la terminazione dei figli
-        wait(NULL);
-        wait(NULL);
+        wait(&son_nipote1);
+        wait(&son_nipote2);
  
         // Manda un messaggio di terminazione al processo logger
-        send_terminate(msq_id);
+        send_terminate();
 
         // Elimina i semafori
         sem_arg.val = 0;
         if(semctl(sem_id, 0, IPC_RMID, sem_arg) == -1){
             perror("FIGLIO: Remove semaphore error");
             exit(1);
-        }   
-        // sem_arg.val = 0;
-        // if(semctl(sem_id, 1, IPC_RMID, sem_arg) == -1){
-        //     perror("FIGLIO: Remove semaphore error");
-        //     exit(1);
-        // }  
+        }  
     }
 }
 
@@ -142,34 +137,19 @@ void status_update(int s){
         printing(messaggio);
     }
     unlock(1);
-    // lock(1);
 
 }
 
-
-// void unlock1(int sem_num){
-
-//     struct sembuf op;
-//     op.sem_num = sem_num;
-//     op.sem_op = 1;          
-//     op.sem_flg = 0;         
-
-//     if (semop(sem_id, &op, 1) == -1) { 
-//         perror("Semaphore unlock operation error");
-//         exit(1);
-//     }
-    
-// }
 
 void send_terminate(){
 
 
     struct Message Msg;
     int size = sizeof(Msg) - sizeof(long);
-    // SE CAMBI MESSGGIO CAMBIA ANCHE LA DIMENSIONE DELLA WRITE IN LOGGER
+    
     char *messaggio = "ricerca conclusa";
     copy_string(Msg.text, messaggio);
-    // strcpy(Msg.text, "ricerca conclusa\0");
+    
     Msg.mtype = 1;
     if((msgsnd(msq_id, &Msg, size, 0)) == -1){
         perror("FIGLIO: Message queue sending error");

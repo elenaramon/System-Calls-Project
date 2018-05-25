@@ -14,6 +14,9 @@
 #include "../include/costanti.h"
 
 
+int lines;
+struct shmid_ds shmid_struct;
+
 void padre(char *file_name_input, char *file_name_output){
 
     /*
@@ -30,9 +33,6 @@ void padre(char *file_name_input, char *file_name_output){
     pid_t son_logger, son_figlio;
     int file_descriptor_input, file_descriptor_output;
     int shm_size1, shm_size2;
-    int shm_id1, shm_id2;
-    int line_counter;
-
 
     // Apertura del file di input
     if((file_descriptor_input = open(file_name_input, O_RDONLY, 0777)) == -1){
@@ -61,10 +61,10 @@ void padre(char *file_name_input, char *file_name_output){
 
     // Definizione posizione file di input
     char *shm_write1 = (char*)s1 + sizeof(struct Status);
-    line_counter = load_file(shm_write1, file_descriptor_input);
+    lines = load_file(shm_write1, file_descriptor_input);
 
     // Calcolo dimensione seconda zona di memoria condivisa
-    shm_size2 = sizeof(char) * 11 * line_counter;
+    shm_size2 = sizeof(char) * 11 * lines;
 
     // Creazione e collegamento della seconda zona di memoria condivisa
     void *s2 = attach_segments(KEY_SHM2, shm_size2);
@@ -93,7 +93,8 @@ void padre(char *file_name_input, char *file_name_output){
     else if(son_logger != 0 && son_figlio == 0){
         // Esecuzione di figlio
 
-        figlio(shm_size1, line_counter);
+        // figlio(shm_size1, line_counter);
+        figlio(shm_size1, lines);
 
     }
     else{
@@ -103,15 +104,14 @@ void padre(char *file_name_input, char *file_name_output){
         wait(NULL);
         wait(NULL);
 
-        check_keys((char*)(s1 + sizeof(struct Status)), (unsigned*) s2, line_counter);
+        check_keys((char*)(s1 + sizeof(struct Status)), (unsigned*) s2);
 
         // Salva le chiavi nel file di output
-        save_keys((unsigned*) s2, file_descriptor_output, line_counter);
+        save_keys((unsigned*) s2, file_descriptor_output);
 
         // Eliminazione dei segmenti di memoria condivisa
-        struct shmid_ds shm_struct;
-        detach_segments(shm_struct, shm_size1, KEY_SHM1);
-        detach_segments(shm_struct, shm_size2, KEY_SHM2);
+        detach_segments(shm_size1, KEY_SHM1, s1);
+        detach_segments(shm_size2, KEY_SHM2, s2);
 
     }
 
@@ -138,7 +138,9 @@ void * attach_segments(int key, int shm_size){
 
 }
 
-void detach_segments(struct shmid_ds shmid_struct, int shm_size, int key){
+void detach_segments(int shm_size, int key, void *shm_address){
+
+    shmdt(shm_address);
 
     int shm_id;
     // Creazione della zona di memoria condivisa   
@@ -192,24 +194,15 @@ int load_file(char* shm_write, int file_descriptor){
 
 }
 
-void check_keys(char *shm_address1, unsigned * shm_address2, int counter){
+void check_keys(char *shm_address1, unsigned * shm_address2){
 
     char* shm_read;
-    // char *buffer = (char*) malloc (sizeof(char) * 11);
-    // int i = 0;
-    // for(shm_read = shm_address2; *shm_read != '\n'; shm_read++, i++){
-        
-    //     buffer[i] = *shm_read;     
-    // }
-    // buffer[i] = '\0';
-    // unsigned key = from_string_to_unsigned(buffer);
-
 
     char clear[512];
     char encoded[512];
     shm_read = shm_address1;
 
-    for(int i = 0; i < counter; i++){
+    for(int i = 0; i < lines; i++){
         int j = 0;
         for(shm_read = (shm_read + 1); *shm_read != '>'; shm_read++, j++){
             clear[j] = *shm_read;
@@ -235,19 +228,20 @@ void check_keys(char *shm_address1, unsigned * shm_address2, int counter){
 
 }
 
-void save_keys(unsigned* shm_address, int file_descriptor, int lines){
+void save_keys(unsigned* shm_address, int file_descriptor){
 
     unsigned* shm_read;
-    char *buffer = (char*) malloc (sizeof(char) * 12);
     int i = 0;
     for(shm_read = shm_address; i < lines; shm_read++, i++){
 
         char *hexa = from_unsigned_to_hexa(*shm_read);
         char *finale = concat_string("0x", hexa);
         finale = concat_string(finale, "\n");
-        write(file_descriptor, finale, 11);
+        write(file_descriptor, finale, string_length(finale));
 
     }
+
+    //PUO ESSERE SMEPLIFICATO
 
     close(file_descriptor);
 

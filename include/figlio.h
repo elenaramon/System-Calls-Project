@@ -20,8 +20,6 @@ void status_update(int s);
  */
 void send_terminate();
 
-// void unlock1(int sem_num);
-
 /// @}
 
 

@@ -77,9 +77,9 @@ void nipote(int shm_size, int line, int id){
             status->grandson = id;
             status->id_string = status->id_string + 1;
 
-            // lock(1);
             kill(getppid(), SIGUSR1);
             lock(1);
+            
             unlock(0);
 
             load_string(line, my_string);

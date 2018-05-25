@@ -14,6 +14,7 @@
 #include "../include/costanti.h"
 
 struct Status *status;
+struct msqid_ds buf;
 
 void logger(){
 
@@ -23,7 +24,6 @@ void logger(){
         end_signal: usato per la terminazione del processo e la chiusura della coda di messaggi
     */
     int msq_id;
-    struct msqid_ds buf;
     int end_signal = 0;
 
 
@@ -36,31 +36,21 @@ void logger(){
     sleep(1);
 
 
-    end_signal = polling_receive(msq_id, buf);
+    end_signal = polling_receive(msq_id);
 
-    /* // AREA DEBUG
-        sleep(5);
-     */
 
     if(end_signal == 1){
-        /* // AREA DEBUG
-            printf("LOGGER: Eliminiamo la coda di messaggi\n");
-        */
+
         if((msgctl(msq_id, IPC_RMID, &buf)) == -1){
             perror("LOGGER: Deallocation message queue error");
             exit(1);
         }
     }
 
-    /* // AREA DEBUG
-        printf("LOGGER: Coda eliminata, il processo logger termina\n");
-    */
-   
-
 }
 
 
-int polling_receive(int msq_id, struct msqid_ds buf){
+int polling_receive(int msq_id){
 
     struct Message Msg;
     int size;
@@ -68,9 +58,6 @@ int polling_receive(int msq_id, struct msqid_ds buf){
     int controll = 0;
 
     do{
-       /*  // AREA DEBUG
-            printf("LOGGER: Ci sono dei messaggi\n");
-        */
         size = sizeof(Msg) - sizeof(long);
         if(msgrcv(msq_id, &Msg, size, 0, 0) == -1){
             perror("Error");
@@ -81,9 +68,7 @@ int polling_receive(int msq_id, struct msqid_ds buf){
         printing(Msg.text);
 
         if(Msg.mtype == 1){
-            /* // AREA DEBUG
-                printf("LOGGER: Un messaggio è di fine\n");
-            */
+
             controll = 1;
         }
 
@@ -92,10 +77,6 @@ int polling_receive(int msq_id, struct msqid_ds buf){
             perror("LOGGER: Errore msgctl");
             exit(1);
         }
-        /* // AREA DEBUG
-        else{
-            printf("LOGGER: Tutto ok, %d\n", (int)buf.msg_qnum);
-        } */
         
     }while((controll == 1 && ((int)buf.msg_qnum) > 0) || (controll == 0));
 
