@@ -2,12 +2,8 @@
 #include <stdlib.h>
 #include <sys/types.h>
 #include <sys/ipc.h>
-#include <sys/shm.h>
-#include <sys/wait.h>
 #include <sys/msg.h>
 #include <unistd.h>
-#include <fcntl.h>
-#include <ctype.h>
 #include "../include/logger.h"
 #include "../include/types.h"
 #include "../include/utilities.h"

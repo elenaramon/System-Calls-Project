@@ -74,45 +74,37 @@ void padre(char *file_name_input, char *file_name_output){
         perror("PADRE: Logger son creation error");
         exit(1);
     }
-
-    // Creazione del figlio figlio
-    if((son_figlio = fork()) == -1){
-        perror("PADRE: Figlio son creation error");
-        exit(1);
-    }
-    if(son_logger == 0 && son_figlio == 0){
-        // Figlio di nessuno
-        exit(0);
-    }
-    else if(son_logger == 0 && son_figlio != 0){
+    else if(son_logger == 0){
         // Esecuzione di logger
-
         logger();
-       
-    }
-    else if(son_logger != 0 && son_figlio == 0){
-        // Esecuzione di figlio
-
-        // figlio(shm_size1, line_counter);
-        figlio(shm_size1, lines);
-
     }
     else{
-        // Esecuzione del padre
 
-        // Attende la terminazione dei figli
-        wait(NULL);
-        wait(NULL);
+        // Creazione del figlio figlio
+        if((son_figlio = fork()) == -1){
+            perror("PADRE: Figlio son creation error");
+            exit(1);
+        }
+        else if(son_figlio == 0){
+             // Esecuzione di figlio
+            // figlio(shm_size1, line_counter);
+            figlio(shm_size1, lines);
+        }
+        else{
+             // Esecuzione del padre
+            // Attende la terminazione dei figli
+            wait(&son_figlio);
+            wait(&son_logger);
 
-        check_keys((char*)(s1 + sizeof(struct Status)), (unsigned*) s2);
+            check_keys((char*)(s1 + sizeof(struct Status)), (unsigned*) s2);
 
-        // Salva le chiavi nel file di output
-        save_keys((unsigned*) s2, file_descriptor_output);
+            // Salva le chiavi nel file di output
+            save_keys((unsigned*) s2, file_descriptor_output);
 
-        // Eliminazione dei segmenti di memoria condivisa
-        detach_segments(shm_size1, KEY_SHM1, s1);
-        detach_segments(shm_size2, KEY_SHM2, s2);
-
+            // Eliminazione dei segmenti di memoria condivisa
+            detach_segments(shm_size1, KEY_SHM1, s1);
+            detach_segments(shm_size2, KEY_SHM2, s2);
+        }
     }
 
 }
