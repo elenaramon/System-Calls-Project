@@ -1,5 +1,5 @@
 /// @file
-/// @defgroup costanti
+/// @defgroup costanti Costanti
 /// @{
 
 #ifndef KEY_SHM1
@@ -32,7 +32,7 @@
 
 #ifndef SIZE
 /**
- * @brief lunghezza massima di una stringa in chiaro o criptata
+ * @brief lunghezza massima di una riga
  */
 #define SIZE 512
 #endif

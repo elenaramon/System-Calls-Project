@@ -1,5 +1,5 @@
 /// @file
-/// @defgroup padre
+/// @defgroup padre Padre
 /// @{
 
 /**
@@ -19,7 +19,6 @@ void* attach_segments(int key, int shm_size);
 
 /**
  * @brief elimina il segmento di memoria condivisa
- * @param shmid_struct struttura definita nella libreria <sys/shm.h> 
  * @param shm_size dimensione della zona di memoria condivisa
  * @param key chiave identificativa del segmento di memoria
  * @param shm_address indirizzo di memoria condivisa

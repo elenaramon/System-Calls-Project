@@ -1,5 +1,5 @@
 /// @file
-/// @defgroup figlio
+/// @defgroup figlio Figlio
 /// @{
 
 /**

@@ -1,5 +1,5 @@
 /// @file
-/// @defgroup utilities
+/// @defgroup utilities Utilities
 /// @{
 
 /**
@@ -44,3 +44,5 @@ char* concat_string(char* stringa1, char* stringa2);
  * @param stringa la stringa da stampare
  */
 void printing(char *stringa);
+
+/// @}

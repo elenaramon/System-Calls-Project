@@ -14,6 +14,12 @@
 #include "../include/utilities.h"
 #include "../include/costanti.h"
 
+
+/**
+ * *status: puntatore alla struttura status
+ * msq_id: identificatore della coda di messaggi
+ * sem_id: identificatore del semaforo
+ */
 struct Status* status;
 int msq_id;
 int sem_id;
@@ -27,6 +33,13 @@ union semun{
 
 void figlio(int shm_size, int line){
 
+    /**
+     * shm_id: identificatore della zona di memoria condivisa
+     * *s1: puntatore alla zona di memoria condivisa s1
+     * son_nipote*: pid dei processi figli di figlio
+     * sem_arg: union per la gestione dei semafori
+     * id: identificativo del nipote* (1 o 2)
+     */
     int shm_id;
     void * s1;
     pid_t son_nipote1, son_nipote2;
@@ -38,7 +51,6 @@ void figlio(int shm_size, int line){
         perror("Opening shared memory error");
         exit(1);
     }
-    // Mi attacco alla zona di memoria
     if((s1 = shmat(shm_id, NULL, 0)) == (void *)-1){
         perror("FIGLIO: Shared memory attachment error");
         exit(1);
@@ -117,7 +129,6 @@ void figlio(int shm_size, int line){
 
 void status_update(int s){
 
-
     if(s == SIGUSR1){
 
         char *messaggio = concat_string("Il nipote ", from_int_to_string(status->grandson));
@@ -136,13 +147,10 @@ void status_update(int s){
 
 void send_terminate(){
 
-
     struct Message Msg;
     int size = sizeof(Msg) - sizeof(long);
-    
     char *messaggio = "ricerca conclusa";
     copy_string(Msg.text, messaggio);
-    
     Msg.mtype = 1;
     if((msgsnd(msq_id, &Msg, size, 0)) == -1){
         perror("FIGLIO: Message queue sending error");

@@ -9,6 +9,10 @@
 #include "../include/utilities.h"
 #include "../include/costanti.h"
 
+/**
+ * *status: puntatore alla struttura status
+ * buf: struttura per la gestione delle code di messaggi definita in <sys/msg.h>
+ */
 struct Status *status;
 struct msqid_ds buf;
 
@@ -21,18 +25,14 @@ void logger(){
     int msq_id;
     int end_signal = 0;
 
-
     if((msq_id = msgget(KEY_MSG, (0666 | IPC_CREAT))) < 0){
         perror("LOGGER: Message queue creation error");
         exit(1);
     }
 
-
     sleep(1);
 
-
     end_signal = polling_receive(msq_id);
-
 
     if(end_signal == 1){
 
@@ -66,7 +66,6 @@ int polling_receive(int msq_id){
 
             controll = 1;
         }
-
 
         if(msgctl(msq_id, IPC_STAT, &buf) == -1){
             perror("LOGGER: Errore msgctl");

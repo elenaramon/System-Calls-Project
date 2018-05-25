@@ -1,5 +1,5 @@
 /// @file
-/// @defgroup nipote
+/// @defgroup nipote Nipote
 /// @{
 
 /**
@@ -56,3 +56,4 @@ void save_key(unsigned key, int my_string);
  */
 time_t current_timestamp();
 
+/// @}

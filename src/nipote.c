@@ -13,7 +13,13 @@
 #include "../include/utilities.h"
 #include "../include/costanti.h"
 
-
+/**
+ * sem_id: identificatore del semaforo
+ * *status: puntatore alla struttura status
+ * *s1: puntatore al segmento 1 di memoria condivisa
+ * *s2: puntatore al segmento 2 di memoria condivisa
+ * msq_id: identificatore della coda di messaggi
+ */
 int sem_id;
 struct Status *status;
 void *s1;
@@ -29,10 +35,13 @@ union semun{
 
 void nipote(int shm_size, int line, int id){
 
+    /**
+     * my_string: identifica la chiave che il processo nipote sta cercando
+     * shm_id*: id delle zone di memoria
+     */
     int my_string;
     int shm_id;
     int shm_id2;
-    union semun sem_arg;
 
     if((msq_id = msgget(KEY_MSG, 0666| IPC_CREAT)) < 0){
         perror("Message queue access error");
@@ -94,7 +103,6 @@ void nipote(int shm_size, int line, int id){
 void lock(int sem_num){
 
     struct sembuf op;
-
     op.sem_num = sem_num;
     op.sem_op = -1;
     op.sem_flg = 0;
@@ -175,7 +183,6 @@ void find_key(char *clear, char *encoded, int my_string){
 void save_key(unsigned key, int my_string){
 
     unsigned *write = (unsigned *) s2;
-
     *(write + my_string)= key;
 
 }
@@ -184,7 +191,6 @@ time_t current_timestamp() {
 
     struct timespec ts;     
     clock_gettime(CLOCK_REALTIME, &ts);    
-
     return ts.tv_sec; 
 }
 
