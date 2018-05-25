@@ -141,25 +141,25 @@ void status_update(int s){
 
         printing(messaggio);
     }
-    unlock1(1);
+    unlock(1);
     // lock(1);
 
 }
 
 
-void unlock1(int sem_num){
+// void unlock1(int sem_num){
 
-    struct sembuf op;
-    op.sem_num = sem_num;
-    op.sem_op = 1;          
-    op.sem_flg = 0;         
+//     struct sembuf op;
+//     op.sem_num = sem_num;
+//     op.sem_op = 1;          
+//     op.sem_flg = 0;         
 
-    if (semop(sem_id, &op, 1) == -1) { 
-        perror("Semaphore unlock operation error");
-        exit(1);
-    }
+//     if (semop(sem_id, &op, 1) == -1) { 
+//         perror("Semaphore unlock operation error");
+//         exit(1);
+//     }
     
-}
+// }
 
 void send_terminate(){
 
