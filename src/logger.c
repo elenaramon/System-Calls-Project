@@ -11,8 +11,7 @@
 #include "../include/logger.h"
 #include "../include/types.h"
 #include "../include/utilities.h"
-
-#define KEY_MSG 77
+#include "../include/costanti.h"
 
 struct Status *status;
 

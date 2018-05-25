@@ -6,16 +6,12 @@
 #include <sys/wait.h>
 #include <unistd.h>
 #include <fcntl.h>
-#include <ctype.h>
 #include "../include/padre.h"
 #include "../include/logger.h"
 #include "../include/types.h"
 #include "../include/figlio.h"
 #include "../include/utilities.h"
-
-#define KEY_SHM1 75
-#define KEY_SHM2 76
-#define SIZE 512
+#include "../include/costanti.h"
 
 
 void padre(char *file_name_input, char *file_name_output){
@@ -107,18 +103,10 @@ void padre(char *file_name_input, char *file_name_output){
         wait(NULL);
         wait(NULL);
 
+        check_keys((char*)(s1 + sizeof(struct Status)), (unsigned*) s2, line_counter);
+
         // Salva le chiavi nel file di output
-        save_keys(s2, file_descriptor_output);
-
-
-        // int correct_keys = check_keys(shm_address1, shm_address2, line_counter);
-        // if(correct_keys == 1){
-        //     printf("PADRE: Le chiavi trovate sono corrette\n");
-        //     save_keys(shm_address2, line_counter, file_descriptor2);
-        // }
-        // else{
-        //     printf("PADRE: Una o più chiavi trovate non sono corrette\n");
-        // }
+        save_keys((unsigned*) s2, file_descriptor_output, line_counter);
 
         // Eliminazione dei segmenti di memoria condivisa
         struct shmid_ds shm_struct;
@@ -204,91 +192,61 @@ int load_file(char* shm_write, int file_descriptor){
 
 }
 
-
-void save_keys(char* shm_address, int file_descriptor){
+void check_keys(char *shm_address1, unsigned * shm_address2, int counter){
 
     char* shm_read;
-
-    for(shm_read = shm_address; *shm_read != '\0'; shm_read++){
-
-        if(*shm_read != '\n'){
-            unsigned int numero = (unsigned int) *shm_read;
-            unsigned int val;
-            char stringa[2];
-            int i;
-
-            for(i = 0; numero != 0; i++){
-
-                val = numero % 16;
-                numero = numero / 16;
-                switch(val){
-                    case 1:
-                        stringa[i] = '1';
-                        break;
-                    case 2:
-                        stringa[i] = '2';
-                        break;
-                    case 3:
-                        stringa[i] = '3';
-                        break;
-                    case 4:
-                        stringa[i] = '4';
-                        break;
-                    case 5:
-                        stringa[i] = '5';
-                        break;
-                    case 6:
-                        stringa[i] = '6';
-                        break;
-                    case 7:
-                        stringa[i] = '7';
-                        break;
-                    case 8:
-                        stringa[i] = '8';
-                        break;
-                    case 9:
-                        stringa[i] = '9';
-                        break;      
-                    case 10:
-                        stringa[i] = 'A';
-                        break;
-                    case 11:
-                        stringa[i] = 'B';
-                        break;
-                    case 12:
-                        stringa[i] = 'C';
-                        break;
-                    case 13:
-                        stringa[i] = 'D';
-                        break;
-                    case 14:
-                        stringa[i] = 'E';
-                        break;
-                    case 15:
-                        stringa[i] = 'F';
-                        break;          
-                    default:
-                        stringa[i] = '0';
-                        break;
-                }
-            }
-            char conv[2];
-            int a;
-            for(a = 0; i > 0; i--, a++){
-                conv[i - 1] = stringa[a];
-            }
-            if(write(file_descriptor, conv, 2) == -1){
-                perror("Write error");
-                exit(1);
-            }
-        }
-        else{        
-            if(write(file_descriptor, shm_read, 1) == -1){
-                perror("Write error");
-                exit(1);
-            }
-        }
+    // char *buffer = (char*) malloc (sizeof(char) * 11);
+    // int i = 0;
+    // for(shm_read = shm_address2; *shm_read != '\n'; shm_read++, i++){
         
+    //     buffer[i] = *shm_read;     
+    // }
+    // buffer[i] = '\0';
+    // unsigned key = from_string_to_unsigned(buffer);
+
+
+    char clear[512];
+    char encoded[512];
+    shm_read = shm_address1;
+
+    for(int i = 0; i < counter; i++){
+        int j = 0;
+        for(shm_read = (shm_read + 1); *shm_read != '>'; shm_read++, j++){
+            clear[j] = *shm_read;
+        }
+        int size = j / 4;
+        j = 0;
+        for(shm_read = (shm_read + 3); *shm_read != '>'; shm_read++, j++){
+            encoded[j] = *shm_read;
+        }
+
+        unsigned key = shm_address2[i];
+        unsigned *unsigned_clear = (unsigned *) clear;
+        unsigned *unsigned_encoded = (unsigned *) encoded;
+        int check = 0;
+        for(j = 0; j < size ; unsigned_clear++, unsigned_encoded++, j++){
+            if((*unsigned_clear ^ key) == *unsigned_encoded){
+                check++;
+            }
+        }   
+        shm_read = shm_read + 2;
+    }
+
+
+}
+
+void save_keys(unsigned* shm_address, int file_descriptor, int lines){
+
+    unsigned* shm_read;
+    char *buffer = (char*) malloc (sizeof(char) * 12);
+    int i = 0;
+    for(shm_read = shm_address; i < lines; shm_read++, i++){
+
+        char *hexa = from_unsigned_to_hexa(*shm_read);
+        char *finale = concat_string("0x", hexa);
+        finale = concat_string(finale, "\n");
+        write(file_descriptor, finale, 11);
+
     }
 
     close(file_descriptor);

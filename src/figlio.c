@@ -8,19 +8,11 @@
 #include <sys/sem.h>
 #include <signal.h>
 #include <unistd.h>
-#include <fcntl.h>
-#include <ctype.h>
 #include "../include/figlio.h"
 #include "../include/types.h"
 #include "../include/nipote.h"
 #include "../include/utilities.h"
-
-
-#include <string.h>
-
-#define KEY_SHM 75
-#define KEY_MSG 77
-#define KEY_SEM 78
+#include "../include/costanti.h"
 
 struct Status* status;
 int msq_id;
@@ -39,9 +31,10 @@ void figlio(int shm_size, int line){
     void * s1;
     pid_t son_nipote1, son_nipote2;
     union semun sem_arg;
+    int id;
 
     // Accedo alla zona di memoria
-    if((shm_id = shmget(KEY_SHM, shm_size, 0666)) < 0){
+    if((shm_id = shmget(KEY_SHM1, shm_size, 0666)) < 0){
         perror("Opening shared memory error");
         exit(1);
     }
@@ -61,20 +54,18 @@ void figlio(int shm_size, int line){
         exit(1);
     }
 
-    // Inizializzo i semafori a 1
+    // Inizializzo il semaforo 0 a 1
     sem_arg.val = 1;
     if (semctl(sem_id, 0, SETVAL, sem_arg) == -1) {
         perror ("FIGLIO: Semaphore initialization");
         exit(1);
     }    
+    // Inizializzo il semaforo 1 a 0
+    sem_arg.val = 0;
     if (semctl(sem_id, 1, SETVAL, sem_arg) == -1) {
         perror ("FIGLIO: Semaphore initialization");
         exit(1);
-    }  
-    if (semctl(sem_id, 2, SETVAL, sem_arg) == -1) {
-        perror ("FIGLIO: Semaphore initialization");
-        exit(1);
-    } 
+    }   
 
     // Accedo alla coda di messaggi
     if((msq_id = msgget(KEY_MSG, 0666| IPC_CREAT)) < 0){
@@ -100,24 +91,24 @@ void figlio(int shm_size, int line){
     }
     else if(son_nipote1 == 0 && son_nipote2 != 0){
         // Esecuzione nipote 1
-        nipote(shm_size, line);
+        id = 1;
+        nipote(shm_size, line, id);
         
 
     }
     else if(son_nipote1 != 0 && son_nipote2 == 0){
         // Esecuzione nipote 2
-        nipote(shm_size, line);
+        id = 2;
+        nipote(shm_size, line, 2);
         
 
     }
     else{
         // Esecuzione del padre
 
-
         // Attende la terminazione dei figli
         wait(NULL);
         wait(NULL);
-
  
         // Manda un messaggio di terminazione al processo logger
         send_terminate(msq_id);
@@ -150,7 +141,8 @@ void status_update(int s){
 
         printing(messaggio);
     }
-    unlock1(2);
+    unlock1(1);
+    // lock(1);
 
 }
 

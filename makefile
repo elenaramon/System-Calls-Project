@@ -8,32 +8,12 @@ CC := gcc
 all: $(PROJECT)
 
 $(PROJECT): $(OBJ)
-	mkdir -p bin
-	$(CC) -o $(PROJECT) $(OBJ)
+	$(LD) $(LDFLAGS) $(OBJ) -o $(PROJECT)
 
-./build/main.o: ./src/main.c ./include/padre.h ./include/types.h
+build/%.o: src/%.c
 	mkdir -p build
 	$(CC) $(CFLAGS) $< -o $@
 
-./build/logger.o: ./src/logger.c ./include/logger.h ./include/types.h
-	mkdir -p build
-	$(CC) $(CFLAGS) $< -o $@
-
-./build/padre.o: ./src/padre.c ./include/padre.h ./include/types.h
-	mkdir -p build
-	$(CC) $(CFLAGS) $< -o $@
-
-./build/figlio.o: ./src/figlio.c ./include/figlio.h ./include/types.h
-	mkdir -p build
-	$(CC) $(CFLAGS) $< -o $@
-
-./build/nipote.o: ./src/nipote.c ./include/nipote.h ./include/types.h
-	mkdir -p build
-	$(CC) $(CFLAGS) $< -o $@
-
-./build/utilities.o: ./src/utilities.c ./include/utilities.h
-	mkdir -p build
-	$(CC) $(CFLAGS) $< -o $@
 
 install:
 	mkdir -p bin

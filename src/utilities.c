@@ -1,17 +1,38 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <signal.h>
 #include <unistd.h>
-#include <fcntl.h>
-#include <ctype.h>
 #include "../include/utilities.h"
 
 int string_length(char* string){
     int i;
-    for(i = 0; *string != '\0'; i++, string++){}
+    // {}
+    for(i = 0; *string != '\0'; i++, string++);
 
     return i;
 }
+
+/*
+char* from_unsigned_to_string(unsigned numero){ 
+    
+    unsigned val = numero;
+    int cifre = 0;
+    while(val != 0){
+        val = val / 10;
+        cifre++;
+    }
+
+    char *new_string = (char*) malloc(sizeof(char) * cifre + 1);
+
+    int i = 0;
+    for(i = cifre - 1; i >= 0; i-- ){
+        new_string[i] = (char) (numero % 10) + '0';
+        numero = numero/10;
+    }
+    new_string[i] = '\0';
+
+    return new_string; 
+}
+*/
 
 char* from_int_to_string(int numero){ 
     
@@ -33,6 +54,43 @@ char* from_int_to_string(int numero){
 
     return new_string; 
 }
+
+char* from_unsigned_to_hexa(unsigned numero){ 
+    
+    unsigned val = numero;
+    int cifre = 0;
+    while(val != 0){
+        val = val / 16;
+        cifre++;
+    }
+
+    char *new_string = (char*) malloc(sizeof(char) * 9);
+
+    int i = 0;
+    for(i = cifre - 1; i >= 0; i-- ){
+        if((numero % 16) <= 9){
+            new_string[i] = (char) (numero % 16) + '0';
+        }
+        else{
+            new_string[i] = (char) ((numero % 16) - 10) + 'A';
+        }
+        numero = numero/16;
+    }
+    new_string[i] = '\0';
+
+    return new_string; 
+}
+
+/*
+unsigned from_string_to_unsigned(char *stringa){
+    unsigned numero = 0;
+    
+    for(int i = 0; stringa[i] != '\0' ; i++){
+        numero = (numero * 10) + (stringa[i] - '0');
+    }
+    return numero;
+}
+*/
 
 void copy_string(char *stringa1, char* stringa2){
 
@@ -75,4 +133,5 @@ void printing(char *stringa){
     i++;
     write(1, stringa, i);
 }
+
 
