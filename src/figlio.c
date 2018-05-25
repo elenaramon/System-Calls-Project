@@ -78,48 +78,41 @@ void figlio(int shm_size, int line){
         perror("FIGLIO: Nipote1 creation error");
         exit(1);
     }
-
-    // Creo il nipote 2
-    if((son_nipote2 = fork()) == -1){
-        perror("FIGLIO: Nipote2 creation error");
-        exit(1);
-    }
-
-    if(son_nipote1 == 0 & son_nipote2 == 0){
-        // figlio di nessuno
-        exit(0);
-    }
-    else if(son_nipote1 == 0 && son_nipote2 != 0){
+    else if(son_nipote1 == 0){
         // Esecuzione nipote 1
         id = 1;
         nipote(shm_size, line, id);
-        
-
-    }
-    else if(son_nipote1 != 0 && son_nipote2 == 0){
-        // Esecuzione nipote 2
-        id = 2;
-        nipote(shm_size, line, id);
-        
-
     }
     else{
-        // Esecuzione del padre
-
-        // Attende la terminazione dei figli
-        wait(&son_nipote1);
-        wait(&son_nipote2);
- 
-        // Manda un messaggio di terminazione al processo logger
-        send_terminate();
-
-        // Elimina i semafori
-        sem_arg.val = 0;
-        if(semctl(sem_id, 0, IPC_RMID, sem_arg) == -1){
-            perror("FIGLIO: Remove semaphore error");
+        // Creo il nipote 2
+        if((son_nipote2 = fork()) == -1){
+            perror("FIGLIO: Nipote2 creation error");
             exit(1);
-        }  
+        }
+        else if(son_nipote2 == 0){
+            // Esecuzione nipote 2
+            id = 2;
+            nipote(shm_size, line, id);
+        }
+        else{
+            // Esecuzione del padre
+
+            // Attende la terminazione dei figli
+            wait(&son_nipote1);
+            wait(&son_nipote2);
+    
+            // Manda un messaggio di terminazione al processo logger
+            send_terminate();
+
+            // Elimina i semafori
+            sem_arg.val = 0;
+            if(semctl(sem_id, 0, IPC_RMID, sem_arg) == -1){
+                perror("FIGLIO: Remove semaphore error");
+                exit(1);
+            }  
+        }
     }
+
 }
 
 void status_update(int s){

@@ -4,10 +4,11 @@
 #include "../include/utilities.h"
 
 int string_length(char* string){
+
     int i;
     for(i = 0; *string != '\0'; i++, string++);
-
     return i;
+
 }
 
 char* from_int_to_string(int numero){ 

@@ -24,10 +24,6 @@ void padre(char *file_name_input, char *file_name_output){
         *status_struct: struttura Status
         file_descriptor_*: file descriptor per file passati in input
         shm_size*: dimensione delle zone di memoria condivise
-        shm_id*: id delle zone di memoria condivise
-        *shm_address*: indirizzi di memoria condivisa a cui attaccarsi
-        *shm_write: variabile per la scrittura nella memoria condivisa del file input
-        line_counter: variabile per il conteggio delle chiavi (conta il numero di righe del file <plai_encoded>)
     */
     
     pid_t son_logger, son_figlio;

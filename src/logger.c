@@ -16,7 +16,6 @@ void logger(){
 
     /*
         msg_id: identificatore della coda di messaggi
-        *buf: struttura coda di messaggi
         end_signal: usato per la terminazione del processo e la chiusura della coda di messaggi
     */
     int msq_id;

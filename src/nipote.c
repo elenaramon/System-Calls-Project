@@ -157,6 +157,7 @@ void load_string(int line, int my_string){
 }
 
 void find_key(char *clear, char *encoded, int my_string){
+
     time_t inizio = current_timestamp();
     unsigned key = 0;
     unsigned *unsigned_clear = (unsigned *) clear;
@@ -168,6 +169,7 @@ void find_key(char *clear, char *encoded, int my_string){
     send_timeelapsed(current_timestamp() - inizio);
 
     save_key(key, my_string);
+    
 }
 
 void save_key(unsigned key, int my_string){

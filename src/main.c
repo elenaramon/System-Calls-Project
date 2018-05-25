@@ -10,7 +10,6 @@
 
 int main(int argc, char* argv[]){
 
-    // controllo dei parametri passati da linea di comando
     if(argc != 3){
         char *messaggio = "Insert:\nkey_finder <file_plain_ancoded> <file_key_destination>";
         write(1, messaggio, string_length(messaggio));
