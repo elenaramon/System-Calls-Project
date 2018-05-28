@@ -2,6 +2,9 @@
 /// @defgroup types Types
 /// @{
 
+#ifndef TYPES
+#define TYPES
+
 /**
  * @brief struttura per identificare la chiave (id_string) su cui un nipote (grandson) sta lavorando
  */
@@ -21,5 +24,7 @@ struct Message{
     /// @param text contiene il testo del messaggio
     char text[128];
 };
+
+#endif
 
 /// @}

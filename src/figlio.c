@@ -157,4 +157,20 @@ void send_terminate(){
         exit(1);
     }
 
+    char *messaggio1 = "ricerca";
+    copy_string(Msg.text, messaggio1);
+    Msg.mtype = 2;
+    if((msgsnd(msq_id, &Msg, size, 0)) == -1){
+        perror("FIGLIO: Message queue sending error");
+        exit(1);
+    }
+
+    char *messaggio2 = "eccomi";
+    copy_string(Msg.text, messaggio2);
+    Msg.mtype = 2;
+    if((msgsnd(msq_id, &Msg, size, 0)) == -1){
+        perror("FIGLIO: Message queue sending error");
+        exit(1);
+    }
+
 }

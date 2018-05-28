@@ -173,7 +173,7 @@ void find_key(char *clear, char *encoded, int my_string){
     while((*unsigned_clear^ key) != *unsigned_encoded){
         key++;
     }
-
+    printf("%u\n", key);
     send_timeelapsed(current_timestamp() - inizio);
 
     save_key(key, my_string);
