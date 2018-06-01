@@ -5,7 +5,7 @@
 /**
  * @brief calcola la lunghezza di una stringa
  * @param stringa puntatore alla stringa di cui calcolare la lunghezza
- * @return il numero di caratter
+ * @return il numero di caratteri
  */
 int string_length(char* stringa);
 

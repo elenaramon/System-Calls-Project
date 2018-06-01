@@ -8,32 +8,18 @@
 #include <sys/sem.h>
 #include <signal.h>
 #include <unistd.h>
-#include "../include/figlio.h"
-#include "../include/types.h"
-#include "../include/nipote.h"
-#include "../include/utilities.h"
-#include "../include/costanti.h"
+#include <figlio.h>
+#include <types.h>
+#include <nipote.h>
+#include <utilities.h>
+#include <constants.h>
 
 //librearia per i thread
 #include <pthread.h>
 
-/**
- * variabile per la scelta tra thread e processi
- * se CONDITION vale 0 (o un valore diverso da 1) viene compilata ed eseguita la parte con i processi
- * se CONDITION vale 1 viene compilata ed eseguita la parte con i thread
- */
-#ifndef CONDITION
-#define CONDITION 0
-#endif
-
-// costante per il numero di thread
-#define NUM 2
-
 struct Status* status;
 int msq_id;
 int sem_id;
-
-
 void *s1;
 void *s2;
 int line;
@@ -44,6 +30,7 @@ union semun{
     unsigned short int* array;
     struct seminfo *__buf;
 };
+
 
 void figlio(int lines, void *shm1, void *shm2){
 
@@ -85,14 +72,19 @@ void figlio(int lines, void *shm1, void *shm2){
         // PARTE CON I NIPOTI
 
         pid_t son_nipote1, son_nipote2;
+        struct Params param[2];
 
         if((son_nipote1 = fork()) == -1){
             perror("FIGLIO: Nipote1 creation error");
             exit(1);
         }
         else if(son_nipote1 == 0){
-            id = 1;
-            nipote(line, id, s1, s2, sem_id);
+            param[0].s1 = s1;
+            param[0].s2 = s2;
+            param[0].id = 1;
+            param[0].sem = sem_id;
+            param[0].line = line;
+            nipote((void *) &param[0]);
         }
         else{
             if((son_nipote2 = fork()) == -1){
@@ -100,8 +92,12 @@ void figlio(int lines, void *shm1, void *shm2){
                 exit(1);
             }
             else if(son_nipote2 == 0){
-                id = 2;
-                nipote(line, id, s1, s2, sem_id);
+                param[1].s1 = s1;
+                param[1].s2 = s2;
+                param[1].id = 2;
+                param[1].sem = sem_id;
+                param[1].line = line;
+                nipote((void *) &param[1]);
             }
             else{
                 wait(&son_nipote1);
@@ -126,7 +122,15 @@ void figlio(int lines, void *shm1, void *shm2){
         pthread_t threads[NUM];
         int rc, t;
         for(t = 0; t < NUM; t++){
-            rc = pthread_create(&threads[t], NULL, StartThread, (void *)t);
+
+            struct Params param[NUM];
+            param[t].s1 = s1;
+            param[t].s2 = s2;
+            param[t].id = (t + 1);
+            param[t].sem = sem_id;
+            param[t].line = line;
+
+            rc = pthread_create(&threads[t], NULL, nipote, (void *) &param[t]);
             if(rc){
                 perror("error\n");
                 exit(1);
@@ -151,9 +155,6 @@ void figlio(int lines, void *shm1, void *shm2){
 
 }
 
-void *StartThread(void *threadID){
-  nipote(line, ((int) threadID + 1), s1, s2, sem_id);
-}
 
 void status_updated(int s){
 

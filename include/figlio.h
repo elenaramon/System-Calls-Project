@@ -4,8 +4,9 @@
 
 /**
  * @brief wrapper del processo figlio
- * @param shm_size dimensione della zona di memoria condivisa contenente il file di input
  * @param line numero di righe del file di input
+ * @param s1 puntatore alla zona di memoria contenente il file di input e la struttura Status
+ * @param s2 puntatore alla zona di memoria per contenere le chiavi trovate
  */
 void figlio(int line, void *s1, void *s2);
 

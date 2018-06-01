@@ -6,7 +6,7 @@
 #define TYPES
 
 /**
- * @brief struttura per identificare la chiave (id_string) su cui un nipote (grandson) sta lavorando
+ * @brief struttura per identificare la chiave (id_string) su cui un nipote/thread (grandson) sta lavorando
  */
 struct Status{
     /// @param grandson identificatore del nipote 

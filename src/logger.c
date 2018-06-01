@@ -4,10 +4,10 @@
 #include <sys/ipc.h>
 #include <sys/msg.h>
 #include <unistd.h>
-#include "../include/logger.h"
-#include "../include/types.h"
-#include "../include/utilities.h"
-#include "../include/costanti.h"
+#include <logger.h>
+#include <types.h>
+#include <utilities.h>
+#include <constants.h>
 
 /**
  * *status: puntatore alla struttura status

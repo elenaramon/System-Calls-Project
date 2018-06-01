@@ -6,12 +6,12 @@
 #include <sys/wait.h>
 #include <unistd.h>
 #include <fcntl.h>
-#include "../include/padre.h"
-#include "../include/logger.h"
-#include "../include/types.h"
-#include "../include/figlio.h"
-#include "../include/utilities.h"
-#include "../include/costanti.h"
+#include <padre.h>
+#include <logger.h>
+#include <types.h>
+#include <figlio.h>
+#include <utilities.h>
+#include <constants.h>
 
 /**
  * lines: numero di righe del file di input
@@ -36,7 +36,7 @@ void padre(char *file_name_input, char *file_name_output){
         perror("PADRE: File descriptor open error");
         exit(1);
     }
-    if((file_descriptor_output = open(file_name_output, O_WRONLY | O_CREAT, 0777)) == -1){
+    if((file_descriptor_output = creat(file_name_output, O_RDONLY | O_WRONLY ^ 0777)) == -1){
         perror("PADRE: File descriptor 2 open error");
         exit(1);
     }
@@ -56,7 +56,6 @@ void padre(char *file_name_input, char *file_name_output){
     // Definizione posizione file di input
     char *shm_write1 = (char*)s1 + sizeof(struct Status);
     lines = load_file(shm_write1, file_descriptor_input);
-    printf("linee: %i\n", lines);
 
     shm_size2 = sizeof(char) * 11 * lines;
     void *s2 = attach_segments(KEY_SHM2, shm_size2);
@@ -139,32 +138,17 @@ void detach_segments(int shm_size, int key, void *shm_address){
 int load_file(char* shm_write, int file_descriptor){
 
     /**
-     * character: per la lettura un carattere alla volta del file di input
+     * buffer: per la lettura del file di input
      * read_line: per la lettura del file
      * counter: conta il numero di righe nel file (corrisponde al numero di chiavi) -> inizializzato a 0
      * position: puntatore del file in lettura -> inizializzato al primo carattere del file
      */
-    char character;
     int read_line;
     int counter = 0;
     int position = lseek(file_descriptor, 0L, SEEK_SET);
-
-    // while((read_line = read(file_descriptor, &character, 1)) == 1){
-    //     if(character == '\n'){
-    //         *shm_write++ = character;
-    //         counter++;
-    //     }
-    //     else{
-    //         *shm_write++ = character;
-    //     }
-    // }
-    // *shm_write = '\0';
-
     char buffer[SIZE];
 
     while((read_line = read(file_descriptor, &buffer, SIZE)) > 0){
-        
-        printf("read_line %i\n", read_line);
 
         for(int i = 0; i < read_line; i++){
             if(buffer[i] == '\n'){
@@ -226,17 +210,19 @@ void check_keys(char *shm_address1, unsigned * shm_address2){
 }
 
 void save_keys(unsigned* shm_address, int file_descriptor){
+    char *hexa;
+    char *chiave;
 
     for(int i = 0; i < lines; i++){
-        char *hexa = from_unsigned_to_hexa(*(shm_address + i));
-        char *chiave = concat_string("0x", hexa);
+        hexa = from_unsigned_to_hexa(*(shm_address + i));
+        chiave = concat_string("0x", hexa);
         chiave = concat_string(chiave, "\n");
         write(file_descriptor, chiave, string_length(chiave));
 
-        free(hexa);
-        free(chiave);
     }
 
+    free(hexa);
+    free(chiave);
     close(file_descriptor);
 
 }

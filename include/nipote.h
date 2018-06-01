@@ -4,11 +4,9 @@
 
 /**
  * @brief wrapper del processo nipote
- * @param shm_size dimensione del segmento s1 di memoria condivisa
- * @param line numero di chiavi da trovare
- * @param id identificativo del processo figlio
+ * @param params puntatore alla struttura contenente i parametri per nipote
  */
-void nipote(int line, int id, void *s1, void *s2, int sem);
+void nipote(void *params);
 
 /**
  * @brief legge la stringa dal segmento s1

@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include "../include/utilities.h"
+#include <utilities.h>
 
 int string_length(char* string){
 

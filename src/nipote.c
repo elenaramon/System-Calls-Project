@@ -8,10 +8,10 @@
 #include <signal.h>
 #include <unistd.h>
 #include <time.h>
-#include "../include/types.h"
-#include "../include/nipote.h"
-#include "../include/utilities.h"
-#include "../include/costanti.h"
+#include <types.h>
+#include <nipote.h>
+#include <utilities.h>
+#include <constants.h>
 
 /**
  * sem_id: identificatore del semaforo
@@ -33,11 +33,13 @@ union semun{
     struct seminfo *__buf;
 };
 
-void nipote(int line, int id, void *shm1, void *shm2, int sem){
+void nipote(void *params){
 
-    s1 = shm1;
-    s2 = shm2;
-    sem_id = sem;
+    struct Params *prm = (struct Params*) params;
+
+    s1 = prm->s1;
+    s2 = prm->s2;
+    sem_id = prm->sem;
 
     /**
      * my_string: identifica la chiave che il processo nipote sta cercando
@@ -56,8 +58,8 @@ void nipote(int line, int id, void *shm1, void *shm2, int sem){
 
         my_string = status->id_string;
 
-        if(my_string != line){
-            status->grandson = id;
+        if(my_string != prm->line){
+            status->grandson = prm->id;
             status->id_string = status->id_string + 1;
             
             #if CONDITION != 1
@@ -89,7 +91,7 @@ void nipote(int line, int id, void *shm1, void *shm2, int sem){
             
             unlock(0);
 
-            char *current_line = load_string(line, my_string);
+            char *current_line = load_string(prm->line, my_string);
             unsigned key = find_key(current_line);
             save_key(key, my_string);
 
@@ -176,7 +178,6 @@ unsigned find_key(char *read){
     while((*unsigned_clear^ key) != *unsigned_encoded){
         key++;
     }
-    printf("%u\n", key);
     send_timeelapsed(current_timestamp() - inizio);
 
     return key;
@@ -205,7 +206,7 @@ void send_timeelapsed(int time){
     copy_string(Msg.text, messaggio);
     Msg.mtype = 2;
     if((msgsnd(msq_id, &Msg, size, 0)) == -1){
-        perror("NIPOTE: Message queue sending error");
+        perror("Message queue sending error");
         exit(1);
     }
     free(messaggio);

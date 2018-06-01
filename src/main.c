@@ -3,9 +3,9 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <ctype.h>
-#include "../include/padre.h"
-#include "../include/types.h"
-#include "../include/utilities.h"
+#include <padre.h>
+#include <types.h>
+#include <utilities.h>
 
 
 int main(int argc, char* argv[]){
