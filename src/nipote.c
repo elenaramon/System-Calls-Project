@@ -33,50 +33,25 @@ union semun{
     struct seminfo *__buf;
 };
 
-void nipote(int shm_size, int line, int id){
+void nipote(int line, int id, void *shm1, void *shm2, int sem){
+
+    s1 = shm1;
+    s2 = shm2;
+    sem_id = sem;
 
     /**
      * my_string: identifica la chiave che il processo nipote sta cercando
      * shm_id*: id delle zone di memoria
      */
     int my_string;
-    int shm_id;
-    int shm_id2;
 
     if((msq_id = msgget(KEY_MSG, 0666| IPC_CREAT)) < 0){
         perror("Message queue access error");
         exit(1);
     }
 
-    if((sem_id = semget(KEY_SEM, 0, (0666 | IPC_CREAT))) < 0){
-        perror("Semaphore creation error");
-        exit(1);
-    }
-
-    if((shm_id = shmget(KEY_SHM1, shm_size, 0666 | IPC_CREAT)) < 0){
-        perror("Shared memory access error");
-        exit(1);
-    }
-
-    if((s1 = shmat(shm_id, NULL, 0)) == (void*) -1){
-        perror("Shared memory attachement error");
-        exit(1);
-    }
-
-    int size2 = sizeof(int) * line + line;
-
-    if((shm_id2 = shmget(KEY_SHM2, size2, 0666 | IPC_CREAT)) < 0){
-        perror("Shared memory access error");
-        exit(1);
-    }
-
-    if((s2 = shmat(shm_id2, NULL, 0)) == (void*) -1){
-        perror("Shared memory attachement error");
-        exit(1);
-    }
-
-
      while(1)   {
+
         lock(0);
 
         my_string = status->id_string;
@@ -84,13 +59,40 @@ void nipote(int shm_size, int line, int id){
         if(my_string != line){
             status->grandson = id;
             status->id_string = status->id_string + 1;
+            
+            #if CONDITION != 1
 
-            kill(getppid(), SIGUSR1);
-            lock(1);
+                // PARTE CON I NIPOTI            
+
+                    kill(getppid(), SIGUSR1);
+
+                    lock(1);
+
+                // FINE PARTE CON I NIPOTI
+
+            #else
+
+                // PARTE CON I THREAD
+
+                char *messaggio = concat_string("Il thread ", from_int_to_string(status->grandson));
+                messaggio = concat_string(messaggio, " sta analizzando la ");
+                messaggio = concat_string(messaggio, from_int_to_string(status->id_string));
+                messaggio = concat_string(messaggio, "-esima stringa.");
+
+                printing(messaggio);
+                free(messaggio);
+
+                // FINE PARTE CON I THREAD
+
+             #endif
+         
             
             unlock(0);
 
-            load_string(line, my_string);
+            char *current_line = load_string(line, my_string);
+            unsigned key = find_key(current_line);
+            save_key(key, my_string);
+
         }
         else{
             unlock(0);
@@ -128,10 +130,8 @@ void unlock(int sem_num){
     
 }
 
-void load_string(int line, int my_string){
+char* load_string(int line, int my_string){
 
-    char clear[512];
-    char encoded[512];
     int current_line = 0;
     char *read = (char*)(s1 + sizeof(struct Status));
     int j;
@@ -146,12 +146,21 @@ void load_string(int line, int my_string){
         }
     }
     
-    int count = j;
+    read = read + j;
+
+    return read;
+}
+
+unsigned find_key(char *read){
+    char clear[512];
+    char encoded[512];
+
+    int count = 0;
     for(; read[count] != '>'; count++);
 
     int i;
     int position = 0;
-    for(i = j + 1; i < count; i++, position++){
+    for(i = 1; i < count; i++, position++){
         clear[position] = read[i];
     }
 
@@ -159,12 +168,6 @@ void load_string(int line, int my_string){
     for(i = i + 3; read[i] != '>'; i++, position++){
         encoded[position] = read[i];
     }
-    
-    find_key(clear, encoded, my_string);
-
-}
-
-void find_key(char *clear, char *encoded, int my_string){
 
     time_t inizio = current_timestamp();
     unsigned key = 0;
@@ -176,7 +179,7 @@ void find_key(char *clear, char *encoded, int my_string){
     printf("%u\n", key);
     send_timeelapsed(current_timestamp() - inizio);
 
-    save_key(key, my_string);
+    return key;
     
 }
 
@@ -205,5 +208,6 @@ void send_timeelapsed(int time){
         perror("NIPOTE: Message queue sending error");
         exit(1);
     }
+    free(messaggio);
 
 }

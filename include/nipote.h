@@ -8,14 +8,15 @@
  * @param line numero di chiavi da trovare
  * @param id identificativo del processo figlio
  */
-void nipote(int shm_size, int line, int id);
+void nipote(int line, int id, void *s1, void *s2, int sem);
 
 /**
  * @brief legge la stringa dal segmento s1
  * @param line numero di righe del file
  * @param my_string stringa da caricare
+ * @return puntatore alla linea interessata
  */
-void load_string(int line, int my_string);
+char* load_string(int line, int my_string);
 
 /**
  * @brief blocca l'accesso esclusivo alla struttura Status
@@ -33,13 +34,13 @@ void unlock(int sem_num);
  * @brief trova la chiave
  * @param clear testo in chiaro
  * @param encoded testo cifrato
- * @param my_string stringa che stiamo analizzando
+ * @return la chiave trovata
  */
-void find_key(char *clear, char *encoded, int my_string);
+unsigned find_key(char *current_line);
 
 /**
  * @brief deposita il messaggio "chiave trovata in (secondi)" sulla coda dei messaggi
- * @param time durata della ricerca della chiava
+ * @param time durata della ricerca della chiave
  */
 void send_timeelapsed(int time);
 

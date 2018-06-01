@@ -31,7 +31,6 @@ void logger(){
     }
 
     while(end_signal != 1){
-        printf("Ciaone\n");
         sleep(1);
         end_signal = polling_receive(msq_id);
     }
@@ -57,7 +56,6 @@ int polling_receive(int msq_id){
         }
         printing(Msg.text);
     }
-    printf("ciao\n");
 
     return controll;
       

@@ -27,7 +27,6 @@ char* from_unsigned_to_hexa(unsigned numero);
  * @brief copia una stringa dentro un'altra
  * @param stringa1 la stringa in cui copiare 
  * @param stringa2 la stringa da copiare
- * @return stringa2 copiata in stringa1
  */
 void copy_string(char *stringa1, char* stringa2);
 

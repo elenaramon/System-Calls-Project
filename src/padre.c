@@ -56,13 +56,10 @@ void padre(char *file_name_input, char *file_name_output){
     // Definizione posizione file di input
     char *shm_write1 = (char*)s1 + sizeof(struct Status);
     lines = load_file(shm_write1, file_descriptor_input);
-
-
+    printf("linee: %i\n", lines);
 
     shm_size2 = sizeof(char) * 11 * lines;
     void *s2 = attach_segments(KEY_SHM2, shm_size2);
-
-
 
     if((son_logger = fork()) == -1){
         perror("PADRE: Logger son creation error");
@@ -80,7 +77,7 @@ void padre(char *file_name_input, char *file_name_output){
         }
         else if(son_figlio == 0){
              // Esecuzione di figlio
-            figlio(shm_size1, lines);
+            figlio(lines, s1, s2);
         }
         else{
             // Esecuzione del padre
@@ -152,16 +149,30 @@ int load_file(char* shm_write, int file_descriptor){
     int counter = 0;
     int position = lseek(file_descriptor, 0L, SEEK_SET);
 
-    while((read_line = read(file_descriptor, &character, 1)) == 1){
-        if(character == '\n'){
-            *shm_write++ = character;
-            counter++;
-        }
-        else{
-            *shm_write++ = character;
+    // while((read_line = read(file_descriptor, &character, 1)) == 1){
+    //     if(character == '\n'){
+    //         *shm_write++ = character;
+    //         counter++;
+    //     }
+    //     else{
+    //         *shm_write++ = character;
+    //     }
+    // }
+    // *shm_write = '\0';
+
+    char buffer[SIZE];
+
+    while((read_line = read(file_descriptor, &buffer, SIZE)) > 0){
+        
+        printf("read_line %i\n", read_line);
+
+        for(int i = 0; i < read_line; i++){
+            if(buffer[i] == '\n'){
+                counter++;                
+            }
+            *shm_write++ = buffer[i];
         }
     }
-    *shm_write = '\0';
 
     close(file_descriptor);
 
@@ -216,25 +227,14 @@ void check_keys(char *shm_address1, unsigned * shm_address2){
 
 void save_keys(unsigned* shm_address, int file_descriptor){
 
-    /* 
-    unsigned* shm_read;
-    int i = 0;
-    for(shm_read = shm_address; i < lines; shm_read++, i++){
-
-        char *hexa = from_unsigned_to_hexa(*shm_read);
-        char *finale = concat_string("0x", hexa);
-        finale = concat_string(finale, "\n");
-        write(file_descriptor, finale, string_length(finale));
-
-    } 
-    */
-
-    //PUO ESSERE SEMPLIFICATO
     for(int i = 0; i < lines; i++){
         char *hexa = from_unsigned_to_hexa(*(shm_address + i));
         char *chiave = concat_string("0x", hexa);
         chiave = concat_string(chiave, "\n");
         write(file_descriptor, chiave, string_length(chiave));
+
+        free(hexa);
+        free(chiave);
     }
 
     close(file_descriptor);
