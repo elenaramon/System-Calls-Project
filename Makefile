@@ -8,21 +8,12 @@ ex: EX=thread
 
 all: $(PROJECT)
 
-ifeq ($(EX),thread)
 $(PROJECT): $(OBJ)
 	$(LD) $(LDFLAGS) $(OBJ) -o $(PROJECT) -lpthread
 
 build/%.o: src/%.c
 	mkdir -p build
-	$(CC) $(CFLAGS) -D CONDITION=1 $< -o $@
-else
-$(PROJECT): $(OBJ)
-	$(LD) $(LDFLAGS) $(OBJ) -o $(PROJECT)
-
-build/%.o: src/%.c
-	mkdir -p build
-	$(CC) $(CFLAGS) $< -o $@
-endif
+	$(CC) $(CFLAGS) $(EX) $< -o $@
 
 install:
 	mkdir -p bin
@@ -30,13 +21,14 @@ install:
 
 help:
 	@echo all: compiles all files
+	@echo thread: compile thread version
 	@echo install: installs application at right place
 	@echo clean: delets everything except source file
 	@echo doc: generate documentation
 
-thread:
-	make EX=thread
-
+thread: EX := -D CONDITION=1
+thread: all
+	
 doc:
 	doxygen doxygen.cfg
 

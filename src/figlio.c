@@ -61,7 +61,7 @@ void figlio(int lines, void *shm1, void *shm2){
         exit(1);
     }   
 
-    if((msq_id = msgget(KEY_MSG, 0666| IPC_CREAT)) < 0){
+    if((msq_id = msgget(KEY_MSG, 0666 | IPC_CREAT)) < 0){
         perror("FIGLIO: Message queue access error");
         exit(1);
     }
@@ -160,15 +160,24 @@ void status_updated(int s){
 
     if(s == SIGUSR1){
 
-        char *messaggio = concat_string("Il nipote ", from_int_to_string(status->grandson));
-        messaggio = concat_string(messaggio, " sta analizzando la ");
-        messaggio = concat_string(messaggio, from_int_to_string(status->id_string));
+        char *nipote =  from_int_to_string(status->grandson);
+        #if CONDITION != 1
+            char *messaggio = concat_string("Il nipote ", nipote);
+        #else
+            char *messaggio = concat_string("Il thread ", nipote);
+        #endif
+        messaggio = concat_string(messaggio, " sta analizzando la ");        
+        char *string = from_int_to_string(status->id_string);
+        messaggio = concat_string(messaggio, string);   
         messaggio = concat_string(messaggio, "-esima stringa.");
 
         printing(messaggio);
 
+        free(nipote);
+        free(string);
         free(messaggio);
-        unlock(1);
+
+        unlock(1);        
     }
 
 }

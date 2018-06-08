@@ -2,3 +2,6 @@ doc/
 build/
 key_finder
 .vscode
+source/
+mie/
+bin/

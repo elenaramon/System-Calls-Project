@@ -45,3 +45,13 @@ char* concat_string(char* stringa1, char* stringa2);
 void printing(char *stringa);
 
 /// @}
+
+void *my_malloc(int key, int size);
+
+void my_free ( void * s3);
+
+struct Memory {
+    key_t key;
+    int shmid ;
+    char buf [1];
+};

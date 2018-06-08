@@ -7,11 +7,13 @@
 #include <sys/sem.h>
 #include <signal.h>
 #include <unistd.h>
-#include <time.h>
+#include <sys/time.h>
 #include <types.h>
 #include <nipote.h>
 #include <utilities.h>
 #include <constants.h>
+
+#include <pthread.h>
 
 /**
  * sem_id: identificatore del semaforo
@@ -33,7 +35,7 @@ union semun{
     struct seminfo *__buf;
 };
 
-void nipote(void *params){
+void *nipote(void *params){
 
     struct Params *prm = (struct Params*) params;
 
@@ -47,18 +49,20 @@ void nipote(void *params){
      */
     int my_string;
 
-    if((msq_id = msgget(KEY_MSG, 0666| IPC_CREAT)) < 0){
+    if((msq_id = msgget(KEY_MSG, 0666)) < 0){
         perror("Message queue access error");
         exit(1);
     }
 
-     while(1)   {
+    lock(0);
 
-        lock(0);
+    // my_string = status->id_string;
 
-        my_string = status->id_string;
+     while((my_string = status->id_string) < prm->line)   {
 
-        if(my_string != prm->line){
+        
+            // my_string = status->id_string;
+
             status->grandson = prm->id;
             status->id_string = status->id_string + 1;
             
@@ -76,13 +80,8 @@ void nipote(void *params){
 
                 // PARTE CON I THREAD
 
-                char *messaggio = concat_string("Il thread ", from_int_to_string(status->grandson));
-                messaggio = concat_string(messaggio, " sta analizzando la ");
-                messaggio = concat_string(messaggio, from_int_to_string(status->id_string));
-                messaggio = concat_string(messaggio, "-esima stringa.");
-
-                printing(messaggio);
-                free(messaggio);
+                kill(getpid(), SIGUSR1);
+                lock(1);
 
                 // FINE PARTE CON I THREAD
 
@@ -95,12 +94,8 @@ void nipote(void *params){
             unsigned key = find_key(current_line);
             save_key(key, my_string);
 
-        }
-        else{
-            unlock(0);
-            break;
-        }
      }
+     unlock(0);
 
 }
 
@@ -111,10 +106,11 @@ void lock(int sem_num){
     op.sem_op = -1;
     op.sem_flg = 0;
 
-    if (semop(sem_id, &op, 1) == -1) {  
-        perror("Semaphore lock operation error");
-        exit(1);
-    }
+    // if (semop(sem_id, &op, 1) == -1) {  
+    //     perror("Semaphore lock operation error");
+    //     exit(1);
+    // }
+    while(semop(sem_id, &op, 1) == -1){}
 
 }
 
@@ -137,18 +133,14 @@ char* load_string(int line, int my_string){
     int current_line = 0;
     char *read = (char*)(s1 + sizeof(struct Status));
     int j;
-    for(j = 0; read[j] != '\0'; j++) {
-        if(current_line == my_string){
-            break;
-        }
-        else{
-            if(read[j] == '\n'){
-                current_line++;
+    for(j = 0; current_line != my_string ; j++) {
+             if(read[j] == '>'){
+                current_line++;                 
+                read = read + j + j + 4;
+                j = 0;                      
             }
-        }
     }
-    
-    read = read + j;
+
 
     return read;
 }
@@ -156,28 +148,25 @@ char* load_string(int line, int my_string){
 unsigned find_key(char *read){
     char clear[512];
     char encoded[512];
-
-    int count = 0;
-    for(; read[count] != '>'; count++);
-
     int i;
     int position = 0;
-    for(i = 1; i < count; i++, position++){
+    for(i = 1; read[i] != '>'; i++, position++){
         clear[position] = read[i];
     }
-
-    position = 0;
-    for(i = i + 3; read[i] != '>'; i++, position++){
-        encoded[position] = read[i];
+    int j = 0;
+    for(i = i + 3; j < position; i++, j++){
+        encoded[j] = read[i];
     }
 
-    time_t inizio = current_timestamp();
     unsigned key = 0;
     unsigned *unsigned_clear = (unsigned *) clear;
     unsigned *unsigned_encoded = (unsigned *) encoded;
+    time_t inizio = current_timestamp();
     while((*unsigned_clear^ key) != *unsigned_encoded){
         key++;
     }
+    printf("%u\n", key);
+
     send_timeelapsed(current_timestamp() - inizio);
 
     return key;
@@ -192,23 +181,35 @@ void save_key(unsigned key, int my_string){
 }
 
 time_t current_timestamp() {     
-
-    struct timespec ts;     
-    clock_gettime(CLOCK_REALTIME, &ts);    
-    return ts.tv_sec; 
+    struct timeval timer;
+    gettimeofday(&timer, NULL);
+    return timer.tv_sec; 
 }
 
-void send_timeelapsed(int time){
+void send_timeelapsed(int time) {
 
     struct Message Msg;
     int size = sizeof(Msg) - sizeof(long);
-    char *messaggio = concat_string("chiave trovata in ", from_int_to_string(time));
+    char *tempo = from_int_to_string(time);
+    char *messaggio = concat_string("chiave trovata in ", tempo);
     copy_string(Msg.text, messaggio);
     Msg.mtype = 2;
     if((msgsnd(msq_id, &Msg, size, 0)) == -1){
         perror("Message queue sending error");
         exit(1);
     }
+
+    free(tempo);
+    // tempo = NULL;
     free(messaggio);
+    // my_free(messaggio);
+    // for (int i = 0; i < string_length(tempo); i++) {
+    //     tempo[i] = '\0';
+    // }
+
+    
+    // my_free(tempo);
+    // messaggio = NULL;
+    // tempo = NULL;
 
 }

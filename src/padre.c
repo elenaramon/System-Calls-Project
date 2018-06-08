@@ -17,7 +17,7 @@
  * lines: numero di righe del file di input
  * shmid_struct: struttura per la gestione della memoria condivisa definita in <sys/shm.h>
  */
-int lines;
+int lines = 0;
 struct shmid_ds shmid_struct;
 
 void padre(char *file_name_input, char *file_name_output){
@@ -41,9 +41,29 @@ void padre(char *file_name_input, char *file_name_output){
         exit(1);
     }
 
+    int read_line;
+    char buffer[SIZE];
+int index = 0;
+    int position = 1;
+    lseek(file_descriptor_input, position, SEEK_SET);
+     while((read_line = read(file_descriptor_input, &buffer, SIZE)) > 0){
+        for(int i = 0; i < read_line; i++, position++){   
+            index++;
+            if(buffer[i] == '>'){
+                lines++;
+                position = position + index + 5;
+                i = read_line;
+                index = 0;
+                lseek(file_descriptor_input, position, SEEK_SET);
+            }
+            
+        }       
+    }
 
     // Calcolo dimensione zona di memoria condivisa
     shm_size1 = sizeof(struct Status) + lseek(file_descriptor_input, 0L, SEEK_END);
+    //alloco il doppio del numero di righe, ogni coppia di righe rappresenta una coppia di plain encoded
+    // shm_size1 = sizeof(struct Status) + (sizeof(unsigned) * counter * 2 * 512);
 
     // Creazione e collegamento della zona di memoria condivisa
     void *s1 = attach_segments(KEY_SHM1, shm_size1);
@@ -55,7 +75,10 @@ void padre(char *file_name_input, char *file_name_output){
 
     // Definizione posizione file di input
     char *shm_write1 = (char*)s1 + sizeof(struct Status);
-    lines = load_file(shm_write1, file_descriptor_input);
+    // unsigned *shm_write1 = (unsigned*)s1 + sizeof(struct Status);
+    load_file(shm_write1, file_descriptor_input);
+
+    printf("Linee %i\n", lines);
 
     shm_size2 = sizeof(char) * 11 * lines;
     void *s2 = attach_segments(KEY_SHM2, shm_size2);
@@ -135,32 +158,23 @@ void detach_segments(int shm_size, int key, void *shm_address){
 
 }
 
-int load_file(char* shm_write, int file_descriptor){
+// int load_file(char* shm_write, int file_descriptor){
+void load_file(char* shm_write, int file_descriptor){
 
-    /**
-     * buffer: per la lettura del file di input
-     * read_line: per la lettura del file
-     * counter: conta il numero di righe nel file (corrisponde al numero di chiavi) -> inizializzato a 0
-     * position: puntatore del file in lettura -> inizializzato al primo carattere del file
-     */
     int read_line;
-    int counter = 0;
-    int position = lseek(file_descriptor, 0L, SEEK_SET);
     char buffer[SIZE];
 
+    lseek(file_descriptor, 0L, SEEK_SET);
+    int totalIndex = 0;
     while((read_line = read(file_descriptor, &buffer, SIZE)) > 0){
-
-        for(int i = 0; i < read_line; i++){
-            if(buffer[i] == '\n'){
-                counter++;                
-            }
-            *shm_write++ = buffer[i];
-        }
+        for(int i = 0; i < read_line; i++){            
+            shm_write[totalIndex++] = buffer[i];           
+            
+        }       
     }
 
-    close(file_descriptor);
 
-    return counter;
+    close(file_descriptor);
 
 }
 
@@ -182,10 +196,11 @@ void check_keys(char *shm_address1, unsigned * shm_address2){
             clear[j] = *shm_read;
         }
         int size = j / 4;
-        j = 0;
-        for(shm_read = (shm_read + 3); *shm_read != '>'; shm_read++, j++){
-            encoded[j] = *shm_read;
+        int position = 0;
+        for(shm_read = (shm_read + 3); position < j; shm_read++, position++){
+            encoded[position] = *shm_read;
         }
+
 
         /**
          * key: chiave trovata per la i-esima stringa
@@ -193,19 +208,21 @@ void check_keys(char *shm_address1, unsigned * shm_address2){
          * *unsigned_encoded: testo cifrato castato ad unsigned per xor
          * check: per la verifica delle chiavi
          */
-
         unsigned key = shm_address2[i];
         unsigned *unsigned_clear = (unsigned *) clear;
         unsigned *unsigned_encoded = (unsigned *) encoded;
-        int check = 0;
+        int check = 0;        
         for(j = 0; j < size; j++){
-            if((*(unsigned_clear + j) ^ key) == *(unsigned_encoded + j)){
-                check++;
+            if((*(unsigned_clear + j) ^ key) != *(unsigned_encoded + j)){
+                check = 1;
             }
         }   
+        if(check == 1){
+                char messaggio[] = "Trovata";
+                printing(messaggio);
+        }
         shm_read = shm_read + 2;
     }
-
 
 }
 
@@ -222,7 +239,11 @@ void save_keys(unsigned* shm_address, int file_descriptor){
     }
 
     free(hexa);
+    // my_free(hexa);
     free(chiave);
+    // my_free(chiave);
+    // hexa = NULL;
+    // chiave = NULL;
     close(file_descriptor);
 
 }

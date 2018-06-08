@@ -9,6 +9,8 @@
 #include <utilities.h>
 #include <constants.h>
 
+#include <signal.h>
+
 /**
  * *status: puntatore alla struttura status
  * buf: struttura per la gestione delle code di messaggi definita in <sys/msg.h>
@@ -31,9 +33,17 @@ void logger(){
     }
 
     while(end_signal != 1){
-        sleep(1);
-        end_signal = polling_receive(msq_id);
-    }
+            // sleep(1);
+
+
+            signal(SIGALRM, sig_alrm);
+            alarm(1);
+            pause();
+            alarm(0);
+
+
+            end_signal = polling_receive(msq_id);
+        }
 
     if((msgctl(msq_id, IPC_RMID, &buf)) == -1){
         perror("LOGGER: Deallocation message queue error");
@@ -41,6 +51,16 @@ void logger(){
     }
 
 }
+
+
+
+void sig_alrm(int s)
+{
+    if(s == SIGALRM){
+        return; 
+    }
+}
+
 
 
 int polling_receive(int msq_id){

@@ -16,6 +16,27 @@
 #define KEY_SHM2 76
 #endif
 
+#ifndef KEY_SHM3
+/**
+ * @brief chiave della sezione di memoria condivisa della from_int_to_string
+ */
+#define KEY_SHM3 90
+#endif
+
+#ifndef KEY_SHM4
+/**
+ * @brief chiave della sezione di memoria condivisa della from_unsigned_to_hexa
+ */
+#define KEY_SHM4 91
+#endif
+
+#ifndef KEY_SHM5
+/**
+ * @brief chiave della sezione di memoria condivisa della concat_string
+ */
+#define KEY_SHM5 92
+#endif
+
 #ifndef KEY_MSG
 /**
  * @brief chiave della coda di messaggi condivisa
@@ -59,7 +80,7 @@ struct Params{
 /**
  * @brief numero di thread da generare
  */
-#define NUM 2
+#define NUM 4
 #endif
 
 #ifndef CONDITION

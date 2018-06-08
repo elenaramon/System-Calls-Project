@@ -31,7 +31,8 @@ void detach_segments(int shm_size, int key, void *shm_address);
  * @param file_descriptor_input file descriptor del file da leggere
  * @return numero di righe del file di input
  */
-int load_file(char* shm_write, int file_descriptor_input);
+// int load_file(char* shm_write, int file_descriptor_input);
+void load_file(char* shm_write, int file_descriptor_input);
 
 /**
  * @brief controlla che le chiavi trovate siano corrette per tutta la lunghezza delle stringhe

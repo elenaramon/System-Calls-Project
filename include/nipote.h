@@ -6,7 +6,7 @@
  * @brief wrapper del processo nipote
  * @param params puntatore alla struttura contenente i parametri per nipote
  */
-void nipote(void *params);
+void *nipote(void *params);
 
 /**
  * @brief legge la stringa dal segmento s1
