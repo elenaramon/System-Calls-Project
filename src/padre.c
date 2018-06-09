@@ -14,8 +14,8 @@
 #include <constants.h>
 
 /**
- * lines: numero di righe del file di input
- * shmid_struct: struttura per la gestione della memoria condivisa definita in <sys/shm.h>
+ * lines numero di righe del file di input
+ * shmid_struct struttura per la gestione della memoria condivisa 
  */
 int lines = 0;
 struct shmid_ds shmid_struct;
@@ -23,96 +23,110 @@ struct shmid_ds shmid_struct;
 void padre(char *file_name_input, char *file_name_output){
 
     /**
-     * son_logger, figlio: variabili per i pid dei processi figli
-     * file_descriptor_*: file descriptor per file passati in input
-     * shm_size*: dimensione delle zone di memoria condivise
+     * son_logger, son_figlio identificativi dei processi generati
+     * file_descriptor_input, file_descriptor_output descrittori dei file
+     * shm_size1, shm_size2 dimensioni delle zone di memoria condivise
      */   
     pid_t son_logger, son_figlio;
     int file_descriptor_input, file_descriptor_output;
     int shm_size1, shm_size2;
 
-    // Apertura dei file
+    // apertura del file di lettura
     if((file_descriptor_input = open(file_name_input, O_RDONLY, 0777)) == -1){
         perror("PADRE: File descriptor open error");
         exit(1);
     }
+    // creazione del file di scrittura
     if((file_descriptor_output = creat(file_name_output, O_RDONLY | O_WRONLY ^ 0777)) == -1){
         perror("PADRE: File descriptor 2 open error");
         exit(1);
     }
 
+    /**
+     * read_line numero di caratteri letti dal file
+     * buffer[SIZE] buffer contenente i caratteri letti dal file
+     * index numero di caratteri della stringa plain
+     * position offset dall'inizio del file
+     */
     int read_line;
     char buffer[SIZE];
-int index = 0;
+    int index = 0;
     int position = 1;
+    // il puntatore in lettura del file viene spostato a position
     lseek(file_descriptor_input, position, SEEK_SET);
-     while((read_line = read(file_descriptor_input, &buffer, SIZE)) > 0){
-        for(int i = 0; i < read_line; i++, position++){   
+    // ciclo di lettura del file
+    while((read_line = read(file_descriptor_input, &buffer, SIZE)) > 0){
+        // ciclo di scorrimento dei caratteri del buffer
+        for(int i = 0; i < read_line; i++, position++){           
             index++;
+            // se buffer è uguale a '>' viene incrementato il numero di linee
             if(buffer[i] == '>'){
                 lines++;
+                // viene calcolata la nuova posizione in lettura
                 position = position + index + 5;
+                // per terminare il ciclo
                 i = read_line;
+                // per azzerare il conteggio dei caratteri del plain
                 index = 0;
+                // viene spostato il puntatore in lettura
                 lseek(file_descriptor_input, position, SEEK_SET);
-            }
-            
+            }            
         }       
     }
 
-    // Calcolo dimensione zona di memoria condivisa
+    // calcolo dimensione della prima zona di memoria condivisa
     shm_size1 = sizeof(struct Status) + lseek(file_descriptor_input, 0L, SEEK_END);
-    //alloco il doppio del numero di righe, ogni coppia di righe rappresenta una coppia di plain encoded
-    // shm_size1 = sizeof(struct Status) + (sizeof(unsigned) * counter * 2 * 512);
-
-    // Creazione e collegamento della zona di memoria condivisa
+    // creazione e collegamento della zona prima di memoria condivisa
     void *s1 = attach_segments(KEY_SHM1, shm_size1);
 
-    // Definizione posizione struttura
+    // definizione posizione struttura
     struct Status* status = (struct Status*) s1;
     status->id_string = 0;
     status->grandson = 0;
 
-    // Definizione posizione file di input
+    // definizione posizione file di input
     char *shm_write1 = (char*)s1 + sizeof(struct Status);
-    // unsigned *shm_write1 = (unsigned*)s1 + sizeof(struct Status);
+
+    // caricamento del file nella zona di memoria condivisa
     load_file(shm_write1, file_descriptor_input);
 
-    printf("Linee %i\n", lines);
-
+    // viene definita la dimensione della seconda zona di memoria condivisa
     shm_size2 = sizeof(char) * 11 * lines;
+    // creazione e collegamento della seconda zona di memoria condivisa
     void *s2 = attach_segments(KEY_SHM2, shm_size2);
 
+    // creazione del figlio logger
     if((son_logger = fork()) == -1){
         perror("PADRE: Logger son creation error");
         exit(1);
     }
     else if(son_logger == 0){
-        // Esecuzione di logger
+        // esecuzione di logger
         logger();
     }
     else{
-
+        // creazione del figlio figlio
         if((son_figlio = fork()) == -1){
             perror("PADRE: Figlio son creation error");
             exit(1);
         }
         else if(son_figlio == 0){
-             // Esecuzione di figlio
+             // esecuzione di figlio
             figlio(lines, s1, s2);
         }
         else{
-            // Esecuzione del padre
-            // Attende la terminazione dei figli
+            
+            // il padre attende la terminazione di figli
             wait(&son_figlio);
             wait(&son_logger);
 
+            // controllo delle chiavi trovate per tutta la lunghezza del testo
             check_keys((char*)(s1 + sizeof(struct Status)), (unsigned*) s2);
 
-            // Salva le chiavi nel file di output
+            // salva le chiavi nel file di output
             save_keys((unsigned*) s2, file_descriptor_output);
 
-            // Eliminazione dei segmenti di memoria condivisa
+            // sliminazione dei segmenti di memoria condivisa
             detach_segments(shm_size1, KEY_SHM1, s1);
             detach_segments(shm_size2, KEY_SHM2, s2);
         }
@@ -122,16 +136,20 @@ int index = 0;
 
 void * attach_segments(int key, int shm_size){
 
+    /**
+     * shm_id identificativo della zona di memoria condivisa
+     * shm_address idirizzo della zona di memoria condivisa
+     */
     int shm_id;
     char *shm_address;
 
-    // Creazione della zona di memoria condivisa   
+    // creazione della zona di memoria condivisa   
     if(( shm_id =  shmget(key, shm_size, 0666 | IPC_CREAT| IPC_EXCL)) < 0){
         perror("PADRE: Shared memory creation error");
         exit(1);
     }
 
-    // Collegamento zona di memoria condivisa con la memoria del processo
+    // collegamento zona di memoria condivisa con la memoria del processo
     if((shm_address = shmat(shm_id, NULL, 0)) == (void*) -1){
         perror("PADRE: Shared memory attachment error");
         exit(1);
@@ -143,37 +161,49 @@ void * attach_segments(int key, int shm_size){
 
 void detach_segments(int shm_size, int key, void *shm_address){
 
+    // detach della zona di memoria condivisa
     shmdt(shm_address);
 
+    // shm_id identificativo della zona di memoria condivisa
     int shm_id;
-    if(( shm_id =  shmget(key, shm_size, 0666)) < 0){
+    
+    // recupero identificativo della zona di memoria condivisa
+    if((shm_id =  shmget(key, shm_size, 0666)) < 0){
         perror("PADRE: Shared memory creation error");
         exit(1);
     }
  
-     if(shmctl(shm_id, IPC_RMID, &shmid_struct) == -1){
+    // eliminazione della zona di memoria condivisa
+    if(shmctl(shm_id, IPC_RMID, &shmid_struct) == -1){
             perror("PADRE: Deallocation shared memory error");
             exit(1);
     }
 
 }
 
-// int load_file(char* shm_write, int file_descriptor){
 void load_file(char* shm_write, int file_descriptor){
 
+    /**
+     * read_line numero di caratteri letti
+     * buffer[SIZE] buffer per contenere i caratteri letti
+     * totalIndex posizione di memoria
+     */
     int read_line;
     char buffer[SIZE];
-
-    lseek(file_descriptor, 0L, SEEK_SET);
     int totalIndex = 0;
+
+    // viene impostato il puntatore in lettura del file a 0
+    lseek(file_descriptor, 0L, SEEK_SET);
+    // ciclo di lettura del file
     while((read_line = read(file_descriptor, &buffer, SIZE)) > 0){
+        // tutto quello letto viene salvato in memoria
         for(int i = 0; i < read_line; i++){            
             shm_write[totalIndex++] = buffer[i];           
             
         }       
     }
 
-
+    // viene chiuso il file
     close(file_descriptor);
 
 }
@@ -181,37 +211,38 @@ void load_file(char* shm_write, int file_descriptor){
 void check_keys(char *shm_address1, unsigned * shm_address2){
 
     /**
-     * *shm_read: puntatore al carattere in lettura
-     * clear[SIZE]: stringa in chiaro
-     * encoded[SIZE]: stringa criptata
+     * clear[SIZE] array per contenere il plain text
+     * encoded[SIZE] array per contenere l'encoded text
      */
-    char* shm_read;
     char clear[SIZE];
     char encoded[SIZE];
-    shm_read = shm_address1;
 
+    // scorrimento della zona di memoria
     for(int i = 0; i < lines; i++){
         int j = 0;
-        for(shm_read = (shm_read + 1); *shm_read != '>'; shm_read++, j++){
-            clear[j] = *shm_read;
+        // viene recuperato il plain text
+        for(shm_address1 = (shm_address1 + 1); *shm_address1 != '>'; shm_address1++, j++){
+            clear[j] = *shm_address1;            
         }
+        // viene impostata la dimensione in unsigned
         int size = j / 4;
         int position = 0;
-        for(shm_read = (shm_read + 3); position < j; shm_read++, position++){
-            encoded[position] = *shm_read;
+        // viene recuperato l'encoded text
+        for(shm_address1 = (shm_address1 + 3); position < j; shm_address1++, position++){
+            encoded[position] = *shm_address1;
         }
 
-
         /**
-         * key: chiave trovata per la i-esima stringa
-         * *unsigned_clear: testo in chiaro castato ad unsigned per xor
-         * *unsigned_encoded: testo cifrato castato ad unsigned per xor
-         * check: per la verifica delle chiavi
+         * key chiave trovata e da controllare
+         * unsigned_clear cast in unsigned del plain text
+         * unsigned_encoded cast in unsigned dell'encoded text
+         * check per il controllo della correttezza della chiave
          */
         unsigned key = shm_address2[i];
         unsigned *unsigned_clear = (unsigned *) clear;
         unsigned *unsigned_encoded = (unsigned *) encoded;
-        int check = 0;        
+        int check = 0;     
+        // ciclo per il controllo   
         for(j = 0; j < size; j++){
             if((*(unsigned_clear + j) ^ key) != *(unsigned_encoded + j)){
                 check = 1;
@@ -221,29 +252,34 @@ void check_keys(char *shm_address1, unsigned * shm_address2){
                 char messaggio[] = "Trovata";
                 printing(messaggio);
         }
-        shm_read = shm_read + 2;
+        shm_address1 = shm_address1 + 2;
     }
 
 }
 
 void save_keys(unsigned* shm_address, int file_descriptor){
+    
+    /**
+     * hexa stringa esadecimale
+     * chiave stringa da salvare sul file
+     */
     char *hexa;
     char *chiave;
 
+    // ciclo per il salvataggio sul file
     for(int i = 0; i < lines; i++){
-        hexa = from_unsigned_to_hexa(*(shm_address + i));
-        chiave = concat_string("0x", hexa);
-        chiave = concat_string(chiave, "\n");
-        write(file_descriptor, chiave, string_length(chiave));
+        hexa = utoh(*(shm_address + i));
+        chiave = concat("0x", hexa);
+        chiave = concat(chiave, "\n");
+        write(file_descriptor, chiave, length(chiave));
 
     }
 
-    free(hexa);
-    // my_free(hexa);
+    // liberazione delle memorie allocate
+    free(hexa);        
     free(chiave);
-    // my_free(chiave);
-    // hexa = NULL;
-    // chiave = NULL;
+    
+    // chiusura del file
     close(file_descriptor);
 
 }

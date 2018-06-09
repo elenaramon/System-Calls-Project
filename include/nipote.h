@@ -17,21 +17,20 @@ void *nipote(void *params);
 char* load_string(int line, int my_string);
 
 /**
- * @brief blocca l'accesso esclusivo alla struttura Status
+ * @brief esegue il decremento del valore del semaforo
  * @param sem_num numero del semaforo
  */
 void lock(int sem_num);
 
 /**
- * @brief sblocca l'accesso esclusivo alla struttura Status
+ * @brief esegue l'incremento del valore del semaforo
  * @param sem_num numero del semaforo
  */
 void unlock(int sem_num);
 
 /**
  * @brief trova la chiave
- * @param clear testo in chiaro
- * @param encoded testo cifrato
+ * @param current_line la stringa contenente plain e encoded text 
  * @return la chiave trovata
  */
 unsigned find_key(char *current_line);

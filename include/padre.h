@@ -29,9 +29,7 @@ void detach_segments(int shm_size, int key, void *shm_address);
  * @brief carica il file di input nel segmento di memoria s1
  * @param shm_write puntatore alla zona di memoria condivisa che conterrà il file
  * @param file_descriptor_input file descriptor del file da leggere
- * @return numero di righe del file di input
  */
-// int load_file(char* shm_write, int file_descriptor_input);
 void load_file(char* shm_write, int file_descriptor_input);
 
 /**

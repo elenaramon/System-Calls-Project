@@ -12,20 +12,14 @@ void figlio(int line, void *s1, void *s2);
 
 /**
  * @brief signal handler del segnale SIGUSR1
- * @param s sengale ricevuto
+ * @param sig sengale ricevuto
  */
-void status_updated(int s);
+void status_updated(int sig);
 
 /**
  * @brief deposita il messaggio di terminazione nella coda di messaggi del processo logger
  */
 void send_terminate();
-
-/**
- * @brief starting routine per i thread
- * @param threadID id del thread
- */
-void *StartThread(void *threadID);
 
 /// @}
 

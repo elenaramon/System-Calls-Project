@@ -16,8 +16,8 @@ int polling_receive(int msq_id);
 
 /**
  * @brief handler di SIGALARM
- * @param s il segnale che riceve l'handler
+ * @param sig il segnale che riceve l'handler
  */
-void sig_alrm(int s);
+void sig_alrm(int sig);
 
 /// @}

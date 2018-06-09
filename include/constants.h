@@ -16,27 +16,6 @@
 #define KEY_SHM2 76
 #endif
 
-#ifndef KEY_SHM3
-/**
- * @brief chiave della sezione di memoria condivisa della from_int_to_string
- */
-#define KEY_SHM3 90
-#endif
-
-#ifndef KEY_SHM4
-/**
- * @brief chiave della sezione di memoria condivisa della from_unsigned_to_hexa
- */
-#define KEY_SHM4 91
-#endif
-
-#ifndef KEY_SHM5
-/**
- * @brief chiave della sezione di memoria condivisa della concat_string
- */
-#define KEY_SHM5 92
-#endif
-
 #ifndef KEY_MSG
 /**
  * @brief chiave della coda di messaggi condivisa
@@ -63,15 +42,15 @@
  * @brief struttura per il passaggio dei parametri al wrapper nipote
  */
 struct Params{
-    // @param s1 puntatore alla zona di memoria s1
+    /// @param s1 puntatore alla zona di memoria s1
     void *s1;
-    // @param s2 puntatore alla zona di memoria s2
+    /// @param s2 puntatore alla zona di memoria s2
     void *s2;
-    // @param line numero di chiavi da trovare
+    /// @param line numero di chiavi da trovare
     int line;
-    // @param id identificatore del processo nipote o del thread    
+    /// @param id identificatore del processo nipote o del thread    
     int id;
-    // @param sem identificatore del semaforo
+    /// @param sem identificatore del semaforo
     int sem;
 };
 #endif
@@ -80,7 +59,7 @@ struct Params{
 /**
  * @brief numero di thread da generare
  */
-#define NUM 4
+#define NUM 2
 #endif
 
 #ifndef CONDITION
