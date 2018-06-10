@@ -32,7 +32,7 @@
 
 #ifndef SIZE
 /**
- * @brief lunghezza massima di una riga
+ * @brief dimensione del buffer in lettura/scrittura
  */
 #define SIZE 512
 #endif
