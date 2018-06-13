@@ -85,7 +85,8 @@ char* concat(char* stringa1, char* stringa2){
         new_string[i] = stringa1[i];
     }
     // copia della seconda stringa in quella nuova
-    for(int j = 0 ; stringa2[j] != '\0'; i++, j++){
+    int j;
+    for(j = 0 ; stringa2[j] != '\0'; i++, j++){
         new_string[i] = stringa2[j];
     }
     new_string[i] = '\0';
@@ -96,12 +97,10 @@ char* concat(char* stringa1, char* stringa2){
 
 void printing(char *stringa){
 
-    int i = 0;
-    for( ; stringa[i] != '\0'; i++);
-    i++;    
-    stringa[i] = '\n';
-    i++;
-    write(1, stringa, i);
+    char *message = concat(stringa, "\n");
+    write(1, message, length(message));
+
+    free(message);
 
 }
 

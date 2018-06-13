@@ -12,6 +12,7 @@
 #include <nipote.h>
 #include <utilities.h>
 #include <constants.h>
+#include <errno.h>
 
 #include <pthread.h>
 
@@ -27,6 +28,10 @@ struct Status *status;
 void *s1;
 void *s2;
 int msq_id;
+
+
+pthread_mutex_t count_mutex;
+
 
 void *nipote(void *params){
 
@@ -46,8 +51,11 @@ void *nipote(void *params){
         exit(1);
     }
 
+    
+
     // decremento del semaforo 0
     lock(0);
+
 
     // ciclo per il calcolo delle chiavi
     while((my_string = status->id_string) < prm->line)   {
@@ -62,36 +70,32 @@ void *nipote(void *params){
                     // invio del segnale al padre
                     kill(getppid(), SIGUSR1);
 
-                    // decremento semaforo 1
-                    lock(1);
-
                 // FINE PARTE CON I NIPOTI
 
             #else
 
                 // PARTE CON I THREAD
-                // invio del segnale al padre
-                kill(getpid(), SIGUSR1);
-
-                // decremento del semaforo 1
-                lock(1);
+                    // invio del segnale al padre
+                    kill(getpid(), SIGUSR1);
 
                 // FINE PARTE CON I THREAD
 
-             #endif
-         
-            // incremento del semaforo 0
-            unlock(0);
 
+            #endif
+            // decremento semaforo 1
+            lock(1);
+            unlock(0);
             // caricamento della stringa da analizzare
-            char *current_line = load_string(prm->line, my_string);
+            char *current_line = load_string(my_string);
             // ricerca della chiave
             unsigned key = find_key(current_line);
             // salvataggio della chiave
             save_key(key, my_string);
 
      }
-    // incremento del semaforo 0
+
+
+    // incremento del semaforo 0 
     unlock(0);
 
 }
@@ -104,12 +108,15 @@ void lock(int sem_num){
     op.sem_op = -1;
     op.sem_flg = 0;
 
-    // if (semop(sem_id, &op, 1) == -1) {  
-    //     perror("Semaphore lock operation error");
-    //     exit(1);
-    // }
-    // tentativo di decremento del semaforo
-    while(semop(sem_id, &op, 1) == -1){}
+    if (semop(sem_id, &op, 1) == -1) {  
+        if(errno == EINTR){
+            lock(sem_num);
+        }
+        else{
+            perror("Semaphore lock operation error");
+            exit(1);
+        }
+    }
 
 }
 
@@ -122,14 +129,19 @@ void unlock(int sem_num){
     op.sem_flg = 0;         
 
     // incremento del semaforo
-    if (semop(sem_id, &op, 1) == -1) { 
-        perror("Semaphore unlock operation error");
-        exit(1);
+    if (semop(sem_id, &op, 1) == -1) {  
+        if(errno == EINTR){
+            unlock(sem_num);
+        }
+        else{
+            perror("Semaphore unlock operation error");
+            exit(1);            
+        }
     }
     
 }
 
-char* load_string(int line, int my_string){
+char* load_string(int my_string){
 
     /**
      * current_line per il conteggio del numero di linee

@@ -10,11 +10,10 @@ void *nipote(void *params);
 
 /**
  * @brief legge la stringa dal segmento s1
- * @param line numero di righe del file
  * @param my_string stringa da caricare
  * @return puntatore alla linea interessata
  */
-char* load_string(int line, int my_string);
+char* load_string(int my_string);
 
 /**
  * @brief esegue il decremento del valore del semaforo

@@ -48,28 +48,25 @@ void padre(char *file_name_input, char *file_name_output){
      * index numero di caratteri della stringa plain
      * position offset dall'inizio del file
      */
+
     int read_line;
     char buffer[SIZE];
     int index = 0;
-    int position = 1;
-    // il puntatore in lettura del file viene spostato a position
-    lseek(file_descriptor_input, position, SEEK_SET);
-    // ciclo di lettura del file
+    int position = 0;
     while((read_line = read(file_descriptor_input, &buffer, SIZE)) > 0){
         // ciclo di scorrimento dei caratteri del buffer
-        for(int i = 0; i < read_line; i++, position++){           
-            index++;
+        int i;
+        for(i = 0; i < read_line; i++, position++){           
             // se buffer è uguale a '>' viene incrementato il numero di linee
             if(buffer[i] == '>'){
                 lines++;
                 // viene calcolata la nuova posizione in lettura
-                position = position + index + 5;
-                // per terminare il ciclo
-                i = read_line;
-                // per azzerare il conteggio dei caratteri del plain
-                index = 0;
-                // viene spostato il puntatore in lettura
-                lseek(file_descriptor_input, position, SEEK_SET);
+                i = i + position + 5;
+                position = 0;
+                if(i > read_line)
+                {
+                    lseek(file_descriptor_input, i - read_line + 1, SEEK_CUR);
+                }
             }            
         }       
     }
@@ -197,7 +194,8 @@ void load_file(char* shm_write, int file_descriptor){
     // ciclo di lettura del file
     while((read_line = read(file_descriptor, &buffer, SIZE)) > 0){
         // tutto quello letto viene salvato in memoria
-        for(int i = 0; i < read_line; i++){            
+        int i;
+        for(i = 0; i < read_line; i++){            
             shm_write[totalIndex++] = buffer[i];           
             
         }       
@@ -218,7 +216,8 @@ void check_keys(char *shm_address1, unsigned * shm_address2){
     char encoded[SIZE];
 
     // scorrimento della zona di memoria
-    for(int i = 0; i < lines; i++){
+    int i;
+    for(i = 0; i < lines; i++){
         int j = 0;
         // viene recuperato il plain text
         for(shm_address1 = (shm_address1 + 1); *shm_address1 != '>'; shm_address1++, j++){
@@ -249,8 +248,7 @@ void check_keys(char *shm_address1, unsigned * shm_address2){
             }
         }   
         if(check == 1){
-                char messaggio[] = "Trovata";
-                printing(messaggio);
+                printing("Trovata una chiave non corretta.");
         }
         shm_address1 = shm_address1 + 2;
     }
@@ -267,7 +265,8 @@ void save_keys(unsigned* shm_address, int file_descriptor){
     char *chiave;
 
     // ciclo per il salvataggio sul file
-    for(int i = 0; i < lines; i++){
+    int i;
+    for(i = 0; i < lines; i++){
         hexa = utoh(*(shm_address + i));
         chiave = concat("0x", hexa);
         chiave = concat(chiave, "\n");
