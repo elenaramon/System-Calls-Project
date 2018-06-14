@@ -42,7 +42,6 @@ char *itos(int numero){
 
 char *utoh(unsigned numero){ 
     
-    unsigned val = numero;
     char *new_string = (char*) malloc(sizeof(char) * 9);
 
     int i = 0;

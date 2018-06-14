@@ -64,10 +64,33 @@ void *nipote(void *params){
             // settaggio parametri struttura status
             status->grandson = prm->id;
             status->id_string = status->id_string + 1;
+
+            // l'identificativo del viene convertito in stringa
+            char *id =  itos(status->grandson);
+
+            #if CONDITION != 1
+
+                // concatenazione della prima parte della stringa            
+                char *messaggio = concat("Il nipote ", id);   
+            #else
+                // concatenazione della prima parte della stringa            
+                char *messaggio = concat("Il thread ", id); 
+            #endif
+
+            // concatenazione della seconda parte della stringa
+            messaggio = concat(messaggio, " sta analizzando la ");        
+            // il numero di stringa in fase di analisi viene convertita in stringa
+            char *string = itos(status->id_string);
+            // concatenazione delle ultime parti della stringa
+            messaggio = concat(messaggio, string);   
+            messaggio = concat(messaggio, "-esima stringa.\n");
+
+            write(prm->pipe, messaggio, length(messaggio));
             
             #if CONDITION != 1
 
                 // PARTE CON I NIPOTI            
+                    
                     // invio del segnale al padre
                     kill(getppid(), SIGUSR1);
 
@@ -75,15 +98,19 @@ void *nipote(void *params){
 
             #else
 
-                // PARTE CON I THREAD
+                // PARTE CON I THREAD          
+
                     // invio del segnale al padre
                     kill(getpid(), SIGUSR1);
 
                 // FINE PARTE CON I THREAD
 
             #endif
-            // decremento semaforo 1
-            lock(1);
+
+            // vengono liberate le zone di memoria
+            free(id);
+            free(string);
+            free(messaggio);
             unlock(0);
             // caricamento della stringa da analizzare
             char *current_line = load_string(my_string);
@@ -97,7 +124,11 @@ void *nipote(void *params){
 
     // incremento del semaforo 0 
     unlock(0);
-
+    #if CONDITION != 1
+        exit(0);
+    #else
+        pthread_exit(0);
+    #endif
 }
 
 void lock(int sem_num){

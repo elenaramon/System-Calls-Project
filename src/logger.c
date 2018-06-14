@@ -60,6 +60,8 @@ void logger(){
         exit(1);
     }
 
+    exit(0);
+
 }
 
 int polling_receive(int msq_id){

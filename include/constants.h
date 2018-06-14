@@ -52,6 +52,8 @@ struct Params{
     int id;
     /// @param sem identificatore del semaforo
     int sem;
+    /// @param pipe descrittore per la scrittura nella pipe
+    int pipe;
 };
 #endif
 
@@ -59,7 +61,7 @@ struct Params{
 /**
  * @brief numero di thread da generare
  */
-#define NUM 4
+#define NUM 16
 #endif
 
 #ifndef CONDITION

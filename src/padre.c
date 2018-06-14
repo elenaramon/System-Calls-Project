@@ -43,7 +43,7 @@ void padre(char *file_name_input, char *file_name_output){
         exit(1);
     }
     // creazione del file di scrittura
-    if((file_descriptor_output = creat(file_name_output, O_RDONLY | O_WRONLY ^ 0777)) == -1){
+    if((file_descriptor_output = creat(file_name_output, ((O_RDONLY | O_WRONLY) ^ 0777))) == -1){
         perror("PADRE: Apertura file output");
         exit(1);
     }
@@ -51,13 +51,11 @@ void padre(char *file_name_input, char *file_name_output){
     /**
      * read_line numero di caratteri letti dal file
      * buffer[SIZE] buffer contenente i caratteri letti dal file
-     * index numero di caratteri della stringa plain
      * position offset dall'inizio del file
      */
 
     int read_line;
     char buffer[SIZE];
-    int index = 0;
     int position = 0;
     while((read_line = read(file_descriptor_input, &buffer, SIZE)) > 0){
         // ciclo di scorrimento dei caratteri del buffer
@@ -135,6 +133,7 @@ void padre(char *file_name_input, char *file_name_output){
         }
     }
 
+    exit(0);
 }
 
 void *attach_segments(int key, int shm_size){
