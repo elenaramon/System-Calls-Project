@@ -12,7 +12,7 @@ void figlio(int line, void *s1, void *s2);
 
 /**
  * @brief signal handler del segnale SIGUSR1
- * @param sig sengale ricevuto
+ * @param sig segnale ricevuto
  */
 void status_updated(int sig);
 

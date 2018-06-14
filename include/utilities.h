@@ -7,28 +7,28 @@
  * @param stringa puntatore alla stringa di cui calcolare la lunghezza
  * @return il numero di caratteri
  */
-int length(char* stringa);
+int length(char *stringa);
 
 /**
  * @brief converte un intero in stringa
  * @param num il numero da convertire
  * @return il numero convertito in stringa
  */
-char* itos(int num);
+char *itos(int num);
 
 /**
  * @brief converte un unsigned in esadecimale
  * @param numero l'unsigned da convertire
- * @return il numero convertito in stringa
+ * @return il numero convertito in esadecimale contenuto in una stringa
  */
-char* utoh(unsigned numero);
+char *utoh(unsigned numero);
 
 /**
  * @brief copia una stringa dentro un'altra
  * @param stringa1 la stringa in cui copiare 
  * @param stringa2 la stringa da copiare
  */
-void copy(char *stringa1, char* stringa2);
+void copy(char *stringa1, char *stringa2);
 
 /**
  * @brief concatena due stringhe
@@ -36,7 +36,7 @@ void copy(char *stringa1, char* stringa2);
  * @param stringa2 la seconda stringa che comparirà in quella finale
  * @return la conatenazione di stringa2 a stringa1
  */
-char* concat(char* stringa1, char* stringa2);
+char *concat(char *stringa1, char *stringa2);
 
 /**
  * @brief stampa su stdout una stringa con new line

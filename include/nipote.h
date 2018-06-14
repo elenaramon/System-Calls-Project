@@ -13,7 +13,7 @@ void *nipote(void *params);
  * @param my_string stringa da caricare
  * @return puntatore alla linea interessata
  */
-char* load_string(int my_string);
+char *load_string(int my_string);
 
 /**
  * @brief esegue il decremento del valore del semaforo
@@ -42,8 +42,8 @@ void send_timeelapsed(int time);
 
 /**
  * @brief salva la chiave nel segmento di memoria s2
- * @param key chiava trovata
- * @param my_string numero della chiava trovata
+ * @param key chiave trovata
+ * @param my_string numero della chiave trovata
  */
 void save_key(unsigned key, int my_string);
 

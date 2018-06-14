@@ -24,7 +24,7 @@
  * line numero di righe nel file
  * semun struttura per settare i semafori
  */
-struct Status* status;
+struct Status *status;
 int msq_id;
 int sem_id;
 void *s1;
@@ -34,7 +34,7 @@ int line;
 union semun{
     int val;
     struct semid_ds *buf;
-    unsigned short int* array;
+    unsigned short int *array;
     struct seminfo *__buf;
 };
 
@@ -50,7 +50,7 @@ void figlio(int lines, void *shm1, void *shm2){
 
     status = (struct Status*) s1;
 
-    // il figlio si regstra per catturare il segnale dei nipoti
+    // il figlio si registra per catturare il segnale dei nipoti
     signal(SIGUSR1, status_updated);
 
     // creazione dell'array di semafori, contiene due semafori

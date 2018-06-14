@@ -10,11 +10,7 @@
 #include <constants.h>
 #include <signal.h>
 
-/**
- * status puntatore alla struttura status
- * buf struttura per la gestione delle code di messaggi
- */
-struct Status *status;
+// buf struttura per la gestione delle code di messaggi
 struct msqid_ds buf;
 
 void logger(){
@@ -32,11 +28,12 @@ void logger(){
         exit(1);
     }
 
+    // il processo logger si registra per catturare l'allarme
+    signal(SIGALRM, sig_alrm);
+
     // ciclo per la lettura della coda di messaggi, continua fino a che non viene letto un messaggio di tipo 1
     while(end_signal != 1){
 
-            // il processo logger si registra per catturare l'allarme
-            signal(SIGALRM, sig_alrm);
             // viene impostato un allarme a 1 secondo per il polling
             alarm(1);
             // il processo attende di ricevere il segnale di alarm

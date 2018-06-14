@@ -77,7 +77,7 @@ void padre(char *file_name_input, char *file_name_output){
     void *s1 = attach_segments(KEY_SHM1, shm_size1);
 
     // definizione posizione struttura
-    struct Status* status = (struct Status*) s1;
+    struct Status *status = (struct Status*) s1;
     status->id_string = 0;
     status->grandson = 0;
 
@@ -131,7 +131,7 @@ void padre(char *file_name_input, char *file_name_output){
 
 }
 
-void * attach_segments(int key, int shm_size){
+void *attach_segments(int key, int shm_size){
 
     /**
      * shm_id identificativo della zona di memoria condivisa
@@ -178,7 +178,7 @@ void detach_segments(int shm_size, int key, void *shm_address){
 
 }
 
-void load_file(char* shm_write, int file_descriptor){
+void load_file(char *shm_write, int file_descriptor){
 
     /**
      * read_line numero di caratteri letti
@@ -206,7 +206,7 @@ void load_file(char* shm_write, int file_descriptor){
 
 }
 
-void check_keys(char *shm_address1, unsigned * shm_address2){
+void check_keys(char *shm_address1, unsigned *shm_address2){
 
     /**
      * clear[SIZE] array per contenere il plain text
@@ -255,7 +255,7 @@ void check_keys(char *shm_address1, unsigned * shm_address2){
 
 }
 
-void save_keys(unsigned* shm_address, int file_descriptor){
+void save_keys(unsigned *shm_address, int file_descriptor){
     
     /**
      * hexa stringa esadecimale
@@ -269,7 +269,7 @@ void save_keys(unsigned* shm_address, int file_descriptor){
     for(i = 0; i < lines; i++){
         hexa = utoh(*(shm_address + i));
         chiave = concat("0x", hexa);
-        chiave = concat(chiave, "\n");
+        chiave = concat(chiave, "\r\n");
         write(file_descriptor, chiave, length(chiave));
 
     }

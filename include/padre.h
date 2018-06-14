@@ -15,7 +15,7 @@ void padre(char *file_name_input, char *file_name_output);
  * @param shm_size dimensione del segmento di memoria
  * @return puntatore alla zona di memoria condivisa
  */
-void* attach_segments(int key, int shm_size);
+void *attach_segments(int key, int shm_size);
 
 /**
  * @brief elimina il segmento di memoria condivisa
@@ -30,14 +30,14 @@ void detach_segments(int shm_size, int key, void *shm_address);
  * @param shm_write puntatore alla zona di memoria condivisa che conterrà il file
  * @param file_descriptor_input file descriptor del file da leggere
  */
-void load_file(char* shm_write, int file_descriptor_input);
+void load_file(char *shm_write, int file_descriptor_input);
 
 /**
  * @brief controlla che le chiavi trovate siano corrette per tutta la lunghezza delle stringhe
  * @param shm_address1 puntatore alla zona di memoria condivisa s1
  * @param shm_address2 puntatore alla zona di memoria condivisa s2
  */
-void check_keys(char *shm_address1, unsigned * shm_address2);
+void check_keys(char *shm_address1, unsigned *shm_address2);
 
 /**
  * @brief salva le chiavi sul file di output

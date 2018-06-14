@@ -6,7 +6,7 @@
 #include <sys/types.h>
 #include <constants.h>
 
-int length(char* string){
+int length(char *string){
 
     int i;
     // scorrimento della stringa fino al carattere di terminazione
@@ -15,7 +15,7 @@ int length(char* string){
 
 }
 
-char* itos(int numero){ 
+char *itos(int numero){ 
     
     int val = numero;
     int cifre = 0;
@@ -40,7 +40,7 @@ char* itos(int numero){
 
 }
 
-char* utoh(unsigned numero){ 
+char *utoh(unsigned numero){ 
     
     unsigned val = numero;
     char *new_string = (char*) malloc(sizeof(char) * 9);
@@ -62,7 +62,7 @@ char* utoh(unsigned numero){
 
 }
 
-void copy(char *stringa1, char* stringa2){
+void copy(char *stringa1, char *stringa2){
 
     int i;
     // ciclo di copia della stringa
@@ -73,11 +73,11 @@ void copy(char *stringa1, char* stringa2){
 
 }
 
-char* concat(char* stringa1, char* stringa2){
+char *concat(char *stringa1, char *stringa2){
 
     int size = length(stringa1) + length(stringa2) + 1;
 
-    char* new_string = (char*) malloc(sizeof(char) * (size));
+    char *new_string = (char*) malloc(sizeof(char) * (size));
 
     int i;
     // copia della prima stringa in quella nuova

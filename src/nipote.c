@@ -29,10 +29,6 @@ void *s1;
 void *s2;
 int msq_id;
 
-
-pthread_mutex_t count_mutex;
-
-
 void *nipote(void *params){
 
     // struttura dei parametri passati
@@ -51,11 +47,8 @@ void *nipote(void *params){
         exit(1);
     }
 
-    
-
     // decremento del semaforo 0
     lock(0);
-
 
     // ciclo per il calcolo delle chiavi
     while((my_string = status->id_string) < prm->line)   {
@@ -79,7 +72,6 @@ void *nipote(void *params){
                     kill(getpid(), SIGUSR1);
 
                 // FINE PARTE CON I THREAD
-
 
             #endif
             // decremento semaforo 1
@@ -108,6 +100,7 @@ void lock(int sem_num){
     op.sem_op = -1;
     op.sem_flg = 0;
 
+    // decremento del semaforo
     if (semop(sem_id, &op, 1) == -1) {  
         if(errno == EINTR){
             lock(sem_num);
@@ -141,7 +134,7 @@ void unlock(int sem_num){
     
 }
 
-char* load_string(int my_string){
+char *load_string(int my_string){
 
     /**
      * current_line per il conteggio del numero di linee
