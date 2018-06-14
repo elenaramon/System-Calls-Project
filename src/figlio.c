@@ -206,9 +206,10 @@ void status_updated(int sig){
     if(sig == SIGUSR1){
 
         char buffer[512];
-        int n;
-        while((n = read(pipe_descriptors[0], buffer, 512)) > 0) {
-            write(1, buffer, n);
+        int read_line;
+        // leggo dalla pipe
+        while((read_line = read(pipe_descriptors[0], buffer, 512)) > 0) {
+            write(1, buffer, read_line);
         }   
       
     }
