@@ -12,8 +12,7 @@ int main(int argc, char* argv[]){
 
     // controlla che vengano passati almeno tre paramatri
     if(argc != 3){
-        char *messaggio = "Insert:\nkey_finder <file_plain_ancoded> <file_key_destination>";
-        write(1, messaggio, length(messaggio));
+        printing("Inserisci:\nkey_finder <file_plain_encoded> <file_key_destination>");
         exit(0);
     }
     

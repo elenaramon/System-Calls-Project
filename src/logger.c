@@ -13,6 +13,15 @@
 // buf struttura per la gestione delle code di messaggi
 struct msqid_ds buf;
 
+void sig_alrm(int sig){
+
+    // controllo che il segnale ricevuto sia SIGALARM
+    if(sig == SIGALRM){
+        return; 
+    }
+
+}
+
 void logger(){
 
     /**
@@ -24,7 +33,7 @@ void logger(){
 
     // creazione della coda di messaggi
     if((msq_id = msgget(KEY_MSG, (0666 | IPC_CREAT))) < 0){
-        perror("LOGGER: Message queue creation error");
+        perror("LOGGER: Creazione coda di messaggi");
         exit(1);
     }
 
@@ -47,17 +56,8 @@ void logger(){
 
     // la coda viene eliminata
     if((msgctl(msq_id, IPC_RMID, &buf)) == -1){
-        perror("LOGGER: Deallocation message queue error");
+        perror("LOGGER: Deallocazione coda di messaggi");
         exit(1);
-    }
-
-}
-
-void sig_alrm(int sig){
-
-    // controllo che il segnale ricevuto sia SIGALARM
-    if(sig == SIGALRM){
-        return; 
     }
 
 }

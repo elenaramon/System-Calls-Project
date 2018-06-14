@@ -26,8 +26,8 @@ help:
 	@echo clean: delets everything except source file
 	@echo doc: generate documentation
 
-thread: EX := -D CONDITION=1
-thread: all
+threads: EX := -D CONDITION=1
+threads: all
 	
 doc:
 	doxygen doxygen.cfg
@@ -35,4 +35,4 @@ doc:
 clean:
 	rm $(OBJ) $(PROJECT)
 	
-.PHONY: all clean install
+.PHONY: all clean install help doc threads

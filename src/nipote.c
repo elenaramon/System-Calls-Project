@@ -29,6 +29,14 @@ void *s1;
 void *s2;
 int msq_id;
 
+time_t current_timestamp() {     
+    
+    struct timeval timer;
+    gettimeofday(&timer, NULL);
+    return timer.tv_sec; 
+
+}
+
 void *nipote(void *params){
 
     // struttura dei parametri passati
@@ -43,7 +51,7 @@ void *nipote(void *params){
 
     // accesso alla coda di messaggi
     if((msq_id = msgget(KEY_MSG, 0666)) < 0){
-        perror("Message queue access error");
+        perror("Accesso coda di messaggi");
         exit(1);
     }
 
@@ -106,7 +114,7 @@ void lock(int sem_num){
             lock(sem_num);
         }
         else{
-            perror("Semaphore lock operation error");
+            perror("Lock semaforo");
             exit(1);
         }
     }
@@ -127,7 +135,7 @@ void unlock(int sem_num){
             unlock(sem_num);
         }
         else{
-            perror("Semaphore unlock operation error");
+            perror("Unlock semaforo");
             exit(1);            
         }
     }
@@ -210,14 +218,6 @@ void save_key(unsigned key, int my_string){
 
 }
 
-time_t current_timestamp() {     
-    
-    struct timeval timer;
-    gettimeofday(&timer, NULL);
-    return timer.tv_sec; 
-
-}
-
 void send_timeelapsed(int time) {
 
     /**
@@ -236,7 +236,7 @@ void send_timeelapsed(int time) {
     Msg.mtype = 2;
     // invio del messaggio sulla coda
     if((msgsnd(msq_id, &Msg, size, 0)) == -1){
-        perror("Message queue sending error");
+        perror("Invio messaggio sulla coda di messaggi");
         exit(1);
     }
 

@@ -14,10 +14,4 @@ void logger();
  */
 int polling_receive(int msq_id);
 
-/**
- * @brief handler di SIGALARM
- * @param sig il segnale che riceve l'handler
- */
-void sig_alrm(int sig);
-
 /// @}

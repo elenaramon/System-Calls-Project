@@ -55,26 +55,26 @@ void figlio(int lines, void *shm1, void *shm2){
 
     // creazione dell'array di semafori, contiene due semafori
     if((sem_id = semget(KEY_SEM, 2, (0666 | IPC_CREAT | IPC_EXCL))) < 0){
-        perror("FIGLIO: Semaphore creation error");
+        perror("FIGLIO: Creazione semaforo");
         exit(1);
     }
 
     // il semaforo 0 viene impostato ad 1
     sem_arg.val = 1;
     if (semctl(sem_id, 0, SETVAL, sem_arg) == -1) {
-        perror ("FIGLIO: Semaphore initialization");
+        perror ("FIGLIO: Inizializzazione semaforo");
         exit(1);        
     }    
     // il semaforo 1 viene impostato a 0
     sem_arg.val = 0;
     if (semctl(sem_id, 1, SETVAL, sem_arg) == -1) {
-        perror ("FIGLIO: Semaphore initialization");
+        perror ("FIGLIO: Inizializzazione semaforo");
         exit(1);
     }   
 
     // viene creata la coda di messaggi
     if((msq_id = msgget(KEY_MSG, 0666 | IPC_CREAT)) < 0){
-        perror("FIGLIO: Message queue access error");
+        perror("FIGLIO: Accesso coda di messaggi");
         exit(1);
     }
 
@@ -93,7 +93,7 @@ void figlio(int lines, void *shm1, void *shm2){
 
         // creazione del nipote1
         if((son_nipote1 = fork()) == -1){
-            perror("FIGLIO: Nipote1 creation error");
+            perror("FIGLIO: Creazione nipote1");
             exit(1);
         }
         else if(son_nipote1 == 0){
@@ -108,7 +108,7 @@ void figlio(int lines, void *shm1, void *shm2){
         else{
             // creazione nipote2
             if((son_nipote2 = fork()) == -1){
-                perror("FIGLIO: Nipote2 creation error");
+                perror("FIGLIO: Creazione nipote2");
                 exit(1);
             }
             else if(son_nipote2 == 0){
@@ -131,7 +131,7 @@ void figlio(int lines, void *shm1, void *shm2){
                 // viene eliminato l'array di semafori
                 sem_arg.val = 0;
                 if(semctl(sem_id, 0, IPC_RMID, sem_arg) == -1){
-                    perror("FIGLIO: Remove semaphore error");
+                    perror("FIGLIO: Rimozione semaforo");
                     exit(1);
                 }  
             }
@@ -149,11 +149,11 @@ void figlio(int lines, void *shm1, void *shm2){
          * counter contatore per la creazione dei thread
          */
         pthread_t threads[NUM];
+        // vengono create le strutture per i thread
+        struct Params param[NUM];
         int creation_return, counter;
         for(counter = 0; counter < NUM; counter++){
-            
-            // vengono create le strutture per i thread
-            struct Params param[NUM];
+
             // vengono inseriti i dati nella struttura da passare al wrapper di nipote
             param[counter].s1 = s1;
             param[counter].s2 = s2;
@@ -163,7 +163,7 @@ void figlio(int lines, void *shm1, void *shm2){
 
             creation_return = pthread_create(&threads[counter], NULL, nipote, (void *) &param[counter]);
             if(creation_return){
-                perror("error\n");
+                perror("Creazione thread");
                 exit(1);
             }
         }
@@ -179,7 +179,7 @@ void figlio(int lines, void *shm1, void *shm2){
         // viene eliminato l'array di semafori
         sem_arg.val = 0;
         if(semctl(sem_id, 0, IPC_RMID, sem_arg) == -1){
-            perror("FIGLIO: Remove semaphore error");
+            perror("FIGLIO: Rimozione semaforo");
             exit(1);
         }     
 
@@ -240,7 +240,7 @@ void send_terminate(){
     Msg.mtype = 1;
     // invio del messaggio
     if((msgsnd(msq_id, &Msg, size, 0)) == -1){
-        perror("FIGLIO: Message queue sending error");
+        perror("FIGLIO: Invio messaggio sulla coda di messaggi");
         exit(1);
     }
 

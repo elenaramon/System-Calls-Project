@@ -47,10 +47,4 @@ void send_timeelapsed(int time);
  */
 void save_key(unsigned key, int my_string);
 
-/**
- * @brief calcola l'ora della chiamata alla funzione in secondi
- * @return l'ora attuale in secondi
- */
-time_t current_timestamp();
-
 /// @}

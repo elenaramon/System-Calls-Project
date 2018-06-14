@@ -31,14 +31,20 @@ void padre(char *file_name_input, char *file_name_output){
     int file_descriptor_input, file_descriptor_output;
     int shm_size1, shm_size2;
 
+    // controllo esistenza file di output, se esiste termino
+    if (access(file_name_output, F_OK) == 0) {
+        printing("PADRE: Il file di output esiste già");
+        exit(1);
+    }
+
     // apertura del file di lettura
     if((file_descriptor_input = open(file_name_input, O_RDONLY, 0777)) == -1){
-        perror("PADRE: File descriptor open error");
+        perror("PADRE: Apertura file input");
         exit(1);
     }
     // creazione del file di scrittura
     if((file_descriptor_output = creat(file_name_output, O_RDONLY | O_WRONLY ^ 0777)) == -1){
-        perror("PADRE: File descriptor 2 open error");
+        perror("PADRE: Apertura file output");
         exit(1);
     }
 
@@ -94,7 +100,7 @@ void padre(char *file_name_input, char *file_name_output){
 
     // creazione del figlio logger
     if((son_logger = fork()) == -1){
-        perror("PADRE: Logger son creation error");
+        perror("PADRE: Creazione logger");
         exit(1);
     }
     else if(son_logger == 0){
@@ -104,7 +110,7 @@ void padre(char *file_name_input, char *file_name_output){
     else{
         // creazione del figlio figlio
         if((son_figlio = fork()) == -1){
-            perror("PADRE: Figlio son creation error");
+            perror("PADRE: Creazione figlio");
             exit(1);
         }
         else if(son_figlio == 0){
@@ -142,13 +148,13 @@ void *attach_segments(int key, int shm_size){
 
     // creazione della zona di memoria condivisa   
     if(( shm_id =  shmget(key, shm_size, 0666 | IPC_CREAT| IPC_EXCL)) < 0){
-        perror("PADRE: Shared memory creation error");
+        perror("PADRE: Creazione memoria condivisa");
         exit(1);
     }
 
     // collegamento zona di memoria condivisa con la memoria del processo
     if((shm_address = shmat(shm_id, NULL, 0)) == (void*) -1){
-        perror("PADRE: Shared memory attachment error");
+        perror("PADRE: Attach memoria condivisa");
         exit(1);
     }
 
@@ -166,13 +172,13 @@ void detach_segments(int shm_size, int key, void *shm_address){
     
     // recupero identificativo della zona di memoria condivisa
     if((shm_id =  shmget(key, shm_size, 0666)) < 0){
-        perror("PADRE: Shared memory creation error");
+        perror("PADRE: Recupero ID memoria condivisa");
         exit(1);
     }
  
     // eliminazione della zona di memoria condivisa
     if(shmctl(shm_id, IPC_RMID, &shmid_struct) == -1){
-            perror("PADRE: Deallocation shared memory error");
+            perror("PADRE: Deallocazione memoria condivisa");
             exit(1);
     }
 
