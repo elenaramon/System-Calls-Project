@@ -63,7 +63,7 @@ void figlio(int lines, void *shm1, void *shm2){
     // il figlio si registra per catturare il segnale dei nipoti
     signal(SIGUSR1, status_updated);
 
-    // creazione dell'array di semafori, contiene due semafori
+    // creazione del semaforo
     if((sem_id = semget(KEY_SEM, 1, (0666 | IPC_CREAT | IPC_EXCL))) < 0){
         perror("FIGLIO: Creazione semaforo");
         exit(1);
