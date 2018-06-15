@@ -67,16 +67,8 @@ void *nipote(void *params){
 
             // l'identificativo del viene convertito in stringa
             char *id =  itos(status->grandson);
-
-            #if CONDITION != 1
-
-                // concatenazione della prima parte della stringa            
-                char *messaggio = concat("Il nipote ", id);   
-            #else
-                // concatenazione della prima parte della stringa            
-                char *messaggio = concat("Il thread ", id); 
-            #endif
-
+            // concatenazione della prima parte della stringa            
+            char *messaggio = concat("Il nipote ", id);   
             // concatenazione della seconda parte della stringa
             messaggio = concat(messaggio, " sta analizzando la ");        
             // il numero di stringa in fase di analisi viene convertita in stringa

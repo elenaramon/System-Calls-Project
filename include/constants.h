@@ -61,7 +61,7 @@ struct Params{
 /**
  * @brief numero di thread da generare
  */
-#define NUM 16
+#define NUM 2
 #endif
 
 #ifndef CONDITION
