@@ -73,4 +73,13 @@ struct Params{
 #define CONDITION 0
 #endif
 
+/// identificativo della zona di memoria condivisa s1
+extern int id1;
+/// identificativo della zona di memoria condivisa s2
+extern int id2;
+/// identificativo della coda di messaggi
+extern int msq_id;
+/// identificativo del semaforo
+extern int sem_id;
+
 /// @}

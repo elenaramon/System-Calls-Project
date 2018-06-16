@@ -42,8 +42,8 @@ void check_keys(char *shm_address1, unsigned *shm_address2);
 /**
  * @brief salva le chiavi sul file di output
  * @param shm_address puntatore alla zona di memoria s2
- * @param file_descriptor_output file descriptor del file di output
+ * @param file_name_output nome del file di output
  */
-void save_keys(unsigned *shm_address, int file_descriptor_output);
+void save_keys(unsigned *shm_address, char *file_name_output);
 
 /// @}

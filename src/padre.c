@@ -1,11 +1,12 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
+#include <fcntl.h>
 #include <sys/types.h>
 #include <sys/ipc.h>
 #include <sys/shm.h>
 #include <sys/wait.h>
-#include <unistd.h>
-#include <fcntl.h>
+
 #include <padre.h>
 #include <logger.h>
 #include <types.h>
@@ -19,6 +20,8 @@
  */
 int lines = 0;
 struct shmid_ds shmid_struct;
+int id1;
+int id2;
 
 void padre(char *file_name_input, char *file_name_output){
 
@@ -27,25 +30,28 @@ void padre(char *file_name_input, char *file_name_output){
      * file_descriptor_input, file_descriptor_output descrittori dei file
      * shm_size1, shm_size2 dimensioni delle zone di memoria condivise
      */   
+
+
+    signal(SIGINT, error_signal);   // ctrl + c
+    signal(SIGTSTP, error_signal);  // ctrl + z
+	signal(SIGTERM, error_signal);
+	signal(SIGQUIT, error_signal);  // ctrl + \  //  
+	signal(SIGSEGV, error_signal);
+	signal(SIGPIPE, error_signal);
+
+
     pid_t son_logger, son_figlio;
-    int file_descriptor_input, file_descriptor_output;
+    int file_descriptor_input;
     int shm_size1, shm_size2;
 
     // controllo esistenza file di output, se esiste termino
     if (access(file_name_output, F_OK) == 0) {
-        printing("PADRE: Il file di output esiste già");
-        exit(1);
+        check_error(-1, "PADRE: Il file di output esiste già");
     }
 
     // apertura del file di lettura
     if((file_descriptor_input = open(file_name_input, O_RDONLY, 0777)) == -1){
-        perror("PADRE: Apertura file input");
-        exit(1);
-    }
-    // creazione del file di scrittura
-    if((file_descriptor_output = creat(file_name_output, ((O_RDONLY | O_WRONLY) ^ 0777))) == -1){
-        perror("PADRE: Apertura file output");
-        exit(1);
+        check_error(-1, "PADRE: Apertura file input");
     }
 
     /**
@@ -69,14 +75,23 @@ void padre(char *file_name_input, char *file_name_output){
                 position = 0;
                 if(i > read_line)
                 {
-                    lseek(file_descriptor_input, i - read_line + 1, SEEK_CUR);
+                    if(lseek(file_descriptor_input, i - read_line + 1, SEEK_CUR) == -1){
+                        check_error(-1, "PADRE: Riposizionamento in lettura nel file (conteggio delle righe)");
+                    }
                 }
             }            
         }       
     }
+    if(read_line == -1){
+        check_error(-1, "PADRE: Lettura del file di input (conteggio delle righe)");
+    }
 
     // calcolo dimensione della prima zona di memoria condivisa
-    shm_size1 = sizeof(struct Status) + lseek(file_descriptor_input, 0L, SEEK_END);
+    int end_position = lseek(file_descriptor_input, 0L, SEEK_END);
+    if(end_position == -1){
+        check_error(-1, "PADRE: Calcolo della dimensione del file");
+    }
+    shm_size1 = sizeof(struct Status) + end_position;
     // creazione e collegamento della zona prima di memoria condivisa
     void *s1 = attach_segments(KEY_SHM1, shm_size1);
 
@@ -98,8 +113,7 @@ void padre(char *file_name_input, char *file_name_output){
 
     // creazione del figlio logger
     if((son_logger = fork()) == -1){
-        perror("PADRE: Creazione logger");
-        exit(1);
+        check_error(-1, "PADRE: Creazione logger");
     }
     else if(son_logger == 0){
         // esecuzione di logger
@@ -108,8 +122,7 @@ void padre(char *file_name_input, char *file_name_output){
     else{
         // creazione del figlio figlio
         if((son_figlio = fork()) == -1){
-            perror("PADRE: Creazione figlio");
-            exit(1);
+            check_error(-1, "PADRE: Creazione figlio");
         }
         else if(son_figlio == 0){
              // esecuzione di figlio
@@ -125,7 +138,7 @@ void padre(char *file_name_input, char *file_name_output){
             check_keys((char*)(s1 + sizeof(struct Status)), (unsigned*) s2);
 
             // salva le chiavi nel file di output
-            save_keys((unsigned*) s2, file_descriptor_output);
+            save_keys((unsigned*) s2, file_name_output);
 
             // sliminazione dei segmenti di memoria condivisa
             detach_segments(shm_size1, KEY_SHM1, s1);
@@ -146,15 +159,19 @@ void *attach_segments(int key, int shm_size){
     char *shm_address;
 
     // creazione della zona di memoria condivisa   
-    if(( shm_id =  shmget(key, shm_size, 0666 | IPC_CREAT| IPC_EXCL)) < 0){
-        perror("PADRE: Creazione memoria condivisa");
-        exit(1);
+    if((shm_id =  shmget(key, shm_size, 0666 | IPC_CREAT| IPC_EXCL)) < 0){
+        check_error(-1, "PADRE: Creazione memoria condivisa");
     }
-
     // collegamento zona di memoria condivisa con la memoria del processo
     if((shm_address = shmat(shm_id, NULL, 0)) == (void*) -1){
-        perror("PADRE: Attach memoria condivisa");
-        exit(1);
+        check_error(-1, "PADRE: Attach memoria condivisa");
+    }
+
+    if(key == KEY_SHM1){
+        id1 = shm_id;
+    }
+    else{
+        id2 = shm_id;
     }
 
     return shm_address;
@@ -171,14 +188,12 @@ void detach_segments(int shm_size, int key, void *shm_address){
     
     // recupero identificativo della zona di memoria condivisa
     if((shm_id =  shmget(key, shm_size, 0666)) < 0){
-        perror("PADRE: Recupero ID memoria condivisa");
-        exit(1);
+        check_error(-1, "PADRE: Recupero ID memoria condivisa");
     }
  
     // eliminazione della zona di memoria condivisa
     if(shmctl(shm_id, IPC_RMID, &shmid_struct) == -1){
-            perror("PADRE: Deallocazione memoria condivisa");
-            exit(1);
+        check_error(-1, "PADRE: Deallocazione memoria condivisa");
     }
 
 }
@@ -195,7 +210,10 @@ void load_file(char *shm_write, int file_descriptor){
     int totalIndex = 0;
 
     // viene impostato il puntatore in lettura del file a 0
-    lseek(file_descriptor, 0L, SEEK_SET);
+    if(lseek(file_descriptor, 0L, SEEK_SET) == -1){
+        check_error(-1, "PADRE: Riposizionamento nel file (Caricamento)");
+    }
+
     // ciclo di lettura del file
     while((read_line = read(file_descriptor, &buffer, SIZE)) > 0){
         // tutto quello letto viene salvato in memoria
@@ -205,9 +223,14 @@ void load_file(char *shm_write, int file_descriptor){
             
         }       
     }
+    if (read_line == -1){
+        check_error(-1, "PADRE: Lettura dal file di input (Caricamento)");
+    }
 
     // viene chiuso il file
-    close(file_descriptor);
+    if(close(file_descriptor) == -1){
+        check_error(-1, "PADRE: Chiusura file di input");
+    }
 
 }
 
@@ -260,7 +283,7 @@ void check_keys(char *shm_address1, unsigned *shm_address2){
 
 }
 
-void save_keys(unsigned *shm_address, int file_descriptor){
+void save_keys(unsigned *shm_address, char *file_name_output){
     
     /**
      * hexa stringa esadecimale
@@ -268,14 +291,22 @@ void save_keys(unsigned *shm_address, int file_descriptor){
      */
     char *hexa;
     char *chiave;
+    int file_descriptor;
+    // creazione del file di scrittura
+    if((file_descriptor = creat(file_name_output, ((O_RDONLY | O_WRONLY) ^ 0777))) == -1){
+        check_error(-1, "PADRE: Apertura file output");
+    }
 
     // ciclo per il salvataggio sul file
     int i;
+    int write_line;
     for(i = 0; i < lines; i++){
         hexa = utoh(*(shm_address + i));
         chiave = concat("0x", hexa);
         chiave = concat(chiave, "\r\n");
-        write(file_descriptor, chiave, length(chiave));
+        if((write_line = write(file_descriptor, chiave, length(chiave))) == -1){
+            check_error(-1, "PADRE: Scrittura sul file di output");
+        }
 
     }
 
@@ -283,7 +314,9 @@ void save_keys(unsigned *shm_address, int file_descriptor){
     free(hexa);        
     free(chiave);
     
-    // chiusura del file
-    close(file_descriptor);
+    // viene chiuso il file
+    if(close(file_descriptor) == -1){
+        check_error(-1, "PADRE: Chiusura file di output");
+    }
 
 }

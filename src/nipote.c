@@ -1,20 +1,20 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <signal.h>
+#include <unistd.h>
 #include <sys/types.h>
 #include <sys/ipc.h>
 #include <sys/shm.h>
 #include <sys/msg.h>
 #include <sys/sem.h>
-#include <signal.h>
-#include <unistd.h>
 #include <sys/time.h>
+#include <pthread.h>
+
 #include <types.h>
 #include <nipote.h>
 #include <utilities.h>
 #include <constants.h>
 #include <errno.h>
-
-#include <pthread.h>
 
 /**
  * sem_id identificativo dell'array di semafori
@@ -51,8 +51,7 @@ void *nipote(void *params){
 
     // accesso alla coda di messaggi
     if((msq_id = msgget(KEY_MSG, 0666)) < 0){
-        perror("Accesso coda di messaggi");
-        exit(1);
+        check_error(-1, "Accesso coda di messaggi");
     }
 
     // decremento del semaforo 0
@@ -77,7 +76,10 @@ void *nipote(void *params){
             messaggio = concat(messaggio, string);   
             messaggio = concat(messaggio, "-esima stringa.\n");
 
-            write(prm->pipe, messaggio, length(messaggio));
+            int write_line;
+            if((write_line = write(prm->pipe, messaggio, length(messaggio))) == -1){
+                check_error(-1, "NIPOTE: Scrittura nella pipe");
+            }
             
             #if CONDITION != 1
 
@@ -132,14 +134,8 @@ void lock(int sem_num){
     op.sem_flg = 0;
 
     // decremento del semaforo
-    if (semop(sem_id, &op, 1) == -1) {  
-        if(errno == EINTR){
-            lock(sem_num);
-        }
-        else{
-            perror("Lock semaforo");
-            exit(1);
-        }
+    if (semop(sem_id, &op, 1) == -1){
+        check_error(-1, "Lock semaforo");
     }
 
 }
@@ -153,14 +149,8 @@ void unlock(int sem_num){
     op.sem_flg = 0;         
 
     // incremento del semaforo
-    if (semop(sem_id, &op, 1) == -1) {  
-        if(errno == EINTR){
-            unlock(sem_num);
-        }
-        else{
-            perror("Unlock semaforo");
-            exit(1);            
-        }
+    if (semop(sem_id, &op, 1) == -1) { 
+        check_error(-1, "Unlock semaforo");    
     }
     
 }
@@ -259,8 +249,7 @@ void send_timeelapsed(int time) {
     Msg.mtype = 2;
     // invio del messaggio sulla coda
     if((msgsnd(msq_id, &Msg, size, 0)) == -1){
-        perror("Invio messaggio sulla coda di messaggi");
-        exit(1);
+        check_error(-1, "Invio messaggio sulla coda di messaggi");
     }
 
     // liberazione delle zone di memoria allocate

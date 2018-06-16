@@ -44,4 +44,28 @@ char *concat(char *stringa1, char *stringa2);
  */
 void printing(char *stringa);
 
+/**
+ * @brief handler per i vari segnali di terminazione
+ * @param sig segnale ricevuto
+ */
+void error_signal(int sig);
+
+/**
+ * @brief rimuove le risorse condivise create quando il programma termina in modo non regolare
+ */
+void remove_resources();
+
+/**
+ * @brief controllo errore della system call
+ * @param error tipo di uscita della system call
+ * @param message messaggio di errore
+ */
+void check_error(int error, char *message);
+
+/**
+ * @brief funzione che stampa a video il messaggio di errore
+ * @param message messaggio di errore
+ */
+void syserr(char *message);
+
 /// @}

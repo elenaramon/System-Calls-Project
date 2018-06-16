@@ -1,10 +1,20 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <utilities.h>
+#include <errno.h>
+#include <signal.h>
 #include <sys/shm.h>
+#include <sys/sem.h>
+#include <sys/msg.h>
 #include <sys/types.h>
+
 #include <constants.h>
+#include <utilities.h>
+
+
+void syserr(char *message){
+    perror(message);
+}
 
 int length(char *string){
 
@@ -97,9 +107,41 @@ char *concat(char *stringa1, char *stringa2){
 void printing(char *stringa){
 
     char *message = concat(stringa, "\n");
-    write(1, message, length(message));
+    int write_line;
+    if((write_line = write(1, message, length(message)) == -1)){
+        check_error(-1, "UTILITIES: Scrittura su STDOUT");
+    }
 
     free(message);
 
 }
 
+void check_error(int error, char *message){
+    if (error == -1) {
+        // EAGAIN : resource temporarily unavailable
+        if (errno == EAGAIN) {
+            return;
+        }
+        syserr(message);
+        // Invio segnale di arresto a tutti i processi
+        kill(0, SIGINT);
+    }
+}
+
+void remove_resources(){
+    // rimozione della memoria condivisa 1
+    shmctl(id1, IPC_RMID, NULL);
+    // rimozione della memoria condivisa 2
+	shmctl(id2, IPC_RMID, NULL);
+    // rimozione della coda di messaggi
+	msgctl(msq_id, IPC_RMID, NULL);
+    // rimozione del semaforo
+	semctl(sem_id, 1, IPC_RMID, NULL);
+}
+
+void error_signal(int sig){
+    // se viene rilevato un errore viene chiamata la procedura di rimozione delle risorse
+    remove_resources();
+    // uscita con errore
+    exit(1);
+}

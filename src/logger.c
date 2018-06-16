@@ -1,17 +1,22 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
+#include <signal.h>
+#include <errno.h>
 #include <sys/types.h>
 #include <sys/ipc.h>
 #include <sys/msg.h>
-#include <unistd.h>
+
 #include <logger.h>
 #include <types.h>
 #include <utilities.h>
 #include <constants.h>
-#include <signal.h>
 
-// buf struttura per la gestione delle code di messaggi
+/** buf struttura per la gestione delle code di messaggi
+ *  msq_id identificativo della coda di messaggi
+ */
 struct msqid_ds buf;
+int msq_id;
 
 void sig_alrm(int sig){
 
@@ -25,16 +30,13 @@ void sig_alrm(int sig){
 void logger(){
 
     /**
-     * msq_id identificativo della coda di messaggi
      * end_signal segnale per terminare la lettura della coda
      */
-    int msq_id;
     int end_signal = 0;
 
     // creazione della coda di messaggi
     if((msq_id = msgget(KEY_MSG, (0666 | IPC_CREAT))) < 0){
-        perror("LOGGER: Creazione coda di messaggi");
-        exit(1);
+        check_error(-1, "LOGGER: Creazione coda di messaggi");
     }
 
     // il processo logger si registra per catturare l'allarme
@@ -56,8 +58,7 @@ void logger(){
 
     // la coda viene eliminata
     if((msgctl(msq_id, IPC_RMID, &buf)) == -1){
-        perror("LOGGER: Deallocazione coda di messaggi");
-        exit(1);
+        check_error(-1, "LOGGER: Deallocazione coda di messaggi");
     }
 
     exit(0);
@@ -74,16 +75,19 @@ int polling_receive(int msq_id){
     struct Message Msg;
     int size;
     int controll = 0;
-
+    int read_message;
     size = sizeof(Msg) - sizeof(long);
     // viene letto un messaggio dalla coda FIFO
-    while ((msgrcv(msq_id, &Msg, size, 0, IPC_NOWAIT)) > 0) {
+    while ((read_message = msgrcv(msq_id, &Msg, size, 0, IPC_NOWAIT)) > 0) {
         // controllo del tipo di messaggio
         if (Msg.mtype == 1) {
             controll = 1;
         }
         // il messagio viene stampato su stdout
         printing(Msg.text);
+    }
+    if(read_message == -1 && errno != ENOMSG){
+        check_error(-1, "LOGGER: Lettura dalla coda di messaggi");
     }
 
     return controll;
