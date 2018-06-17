@@ -109,23 +109,21 @@ void printing(char *stringa){
     char *message = concat(stringa, "\n");
     int write_line;
     if((write_line = write(1, message, length(message)) == -1)){
-        check_error(-1, "UTILITIES: Scrittura su STDOUT");
+        check_error("UTILITIES: Scrittura su STDOUT");
     }
 
     free(message);
 
 }
 
-void check_error(int error, char *message){
-    if (error == -1) {
-        // EAGAIN : resource temporarily unavailable
-        if (errno == EAGAIN) {
-            return;
-        }
-        syserr(message);
-        // Invio segnale di arresto a tutti i processi
-        kill(0, SIGINT);
+void check_error(char *message){
+    // EAGAIN : resource temporarily unavailable
+    if (errno == EAGAIN) {
+        return;
     }
+    syserr(message);
+    // Invio segnale di arresto a tutti i processi
+    kill(0, SIGINT);
 }
 
 void remove_resources(){

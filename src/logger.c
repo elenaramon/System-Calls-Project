@@ -36,7 +36,7 @@ void logger(){
 
     // creazione della coda di messaggi
     if((msq_id = msgget(KEY_MSG, (0666 | IPC_CREAT))) < 0){
-        check_error(-1, "LOGGER: Creazione coda di messaggi");
+        check_error("LOGGER: Creazione coda di messaggi");
     }
 
     // il processo logger si registra per catturare l'allarme
@@ -58,7 +58,7 @@ void logger(){
 
     // la coda viene eliminata
     if((msgctl(msq_id, IPC_RMID, &buf)) == -1){
-        check_error(-1, "LOGGER: Deallocazione coda di messaggi");
+        check_error("LOGGER: Deallocazione coda di messaggi");
     }
 
     exit(0);
@@ -87,7 +87,7 @@ int polling_receive(int msq_id){
         printing(Msg.text);
     }
     if(read_message == -1 && errno != ENOMSG){
-        check_error(-1, "LOGGER: Lettura dalla coda di messaggi");
+        check_error("LOGGER: Lettura dalla coda di messaggi");
     }
 
     return controll;

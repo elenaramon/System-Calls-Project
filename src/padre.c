@@ -46,12 +46,12 @@ void padre(char *file_name_input, char *file_name_output){
 
     // controllo esistenza file di output, se esiste termino
     if (access(file_name_output, F_OK) == 0) {
-        check_error(-1, "PADRE: Il file di output esiste già");
+        check_error("PADRE: Il file di output esiste già");
     }
 
     // apertura del file di lettura
     if((file_descriptor_input = open(file_name_input, O_RDONLY, 0777)) == -1){
-        check_error(-1, "PADRE: Apertura file input");
+        check_error("PADRE: Apertura file input");
     }
 
     /**
@@ -76,20 +76,20 @@ void padre(char *file_name_input, char *file_name_output){
                 if(i > read_line)
                 {
                     if(lseek(file_descriptor_input, i - read_line + 1, SEEK_CUR) == -1){
-                        check_error(-1, "PADRE: Riposizionamento in lettura nel file (conteggio delle righe)");
+                        check_error("PADRE: Riposizionamento in lettura nel file (conteggio delle righe)");
                     }
                 }
             }            
         }       
     }
     if(read_line == -1){
-        check_error(-1, "PADRE: Lettura del file di input (conteggio delle righe)");
+        check_error("PADRE: Lettura del file di input (conteggio delle righe)");
     }
 
     // calcolo dimensione della prima zona di memoria condivisa
     int end_position = lseek(file_descriptor_input, 0L, SEEK_END);
     if(end_position == -1){
-        check_error(-1, "PADRE: Calcolo della dimensione del file");
+        check_error("PADRE: Calcolo della dimensione del file");
     }
     shm_size1 = sizeof(struct Status) + end_position;
     // creazione e collegamento della zona prima di memoria condivisa
@@ -113,7 +113,7 @@ void padre(char *file_name_input, char *file_name_output){
 
     // creazione del figlio logger
     if((son_logger = fork()) == -1){
-        check_error(-1, "PADRE: Creazione logger");
+        check_error("PADRE: Creazione logger");
     }
     else if(son_logger == 0){
         // esecuzione di logger
@@ -122,7 +122,7 @@ void padre(char *file_name_input, char *file_name_output){
     else{
         // creazione del figlio figlio
         if((son_figlio = fork()) == -1){
-            check_error(-1, "PADRE: Creazione figlio");
+            check_error("PADRE: Creazione figlio");
         }
         else if(son_figlio == 0){
              // esecuzione di figlio
@@ -160,11 +160,11 @@ void *attach_segments(int key, int shm_size){
 
     // creazione della zona di memoria condivisa   
     if((shm_id =  shmget(key, shm_size, 0666 | IPC_CREAT| IPC_EXCL)) < 0){
-        check_error(-1, "PADRE: Creazione memoria condivisa");
+        check_error("PADRE: Creazione memoria condivisa");
     }
     // collegamento zona di memoria condivisa con la memoria del processo
     if((shm_address = shmat(shm_id, NULL, 0)) == (void*) -1){
-        check_error(-1, "PADRE: Attach memoria condivisa");
+        check_error("PADRE: Attach memoria condivisa");
     }
 
     if(key == KEY_SHM1){
@@ -188,12 +188,12 @@ void detach_segments(int shm_size, int key, void *shm_address){
     
     // recupero identificativo della zona di memoria condivisa
     if((shm_id =  shmget(key, shm_size, 0666)) < 0){
-        check_error(-1, "PADRE: Recupero ID memoria condivisa");
+        check_error("PADRE: Recupero ID memoria condivisa");
     }
  
     // eliminazione della zona di memoria condivisa
     if(shmctl(shm_id, IPC_RMID, &shmid_struct) == -1){
-        check_error(-1, "PADRE: Deallocazione memoria condivisa");
+        check_error("PADRE: Deallocazione memoria condivisa");
     }
 
 }
@@ -211,7 +211,7 @@ void load_file(char *shm_write, int file_descriptor){
 
     // viene impostato il puntatore in lettura del file a 0
     if(lseek(file_descriptor, 0L, SEEK_SET) == -1){
-        check_error(-1, "PADRE: Riposizionamento nel file (Caricamento)");
+        check_error("PADRE: Riposizionamento nel file (Caricamento)");
     }
 
     // ciclo di lettura del file
@@ -224,12 +224,12 @@ void load_file(char *shm_write, int file_descriptor){
         }       
     }
     if (read_line == -1){
-        check_error(-1, "PADRE: Lettura dal file di input (Caricamento)");
+        check_error("PADRE: Lettura dal file di input (Caricamento)");
     }
 
     // viene chiuso il file
     if(close(file_descriptor) == -1){
-        check_error(-1, "PADRE: Chiusura file di input");
+        check_error("PADRE: Chiusura file di input");
     }
 
 }
@@ -294,7 +294,7 @@ void save_keys(unsigned *shm_address, char *file_name_output){
     int file_descriptor;
     // creazione del file di scrittura
     if((file_descriptor = creat(file_name_output, ((O_RDONLY | O_WRONLY) ^ 0777))) == -1){
-        check_error(-1, "PADRE: Apertura file output");
+        check_error("PADRE: Apertura file output");
     }
 
     // ciclo per il salvataggio sul file
@@ -305,7 +305,7 @@ void save_keys(unsigned *shm_address, char *file_name_output){
         chiave = concat("0x", hexa);
         chiave = concat(chiave, "\r\n");
         if((write_line = write(file_descriptor, chiave, length(chiave))) == -1){
-            check_error(-1, "PADRE: Scrittura sul file di output");
+            check_error("PADRE: Scrittura sul file di output");
         }
 
     }
@@ -316,7 +316,7 @@ void save_keys(unsigned *shm_address, char *file_name_output){
     
     // viene chiuso il file
     if(close(file_descriptor) == -1){
-        check_error(-1, "PADRE: Chiusura file di output");
+        check_error("PADRE: Chiusura file di output");
     }
 
 }

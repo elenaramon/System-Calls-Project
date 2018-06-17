@@ -57,10 +57,9 @@ void remove_resources();
 
 /**
  * @brief controllo errore della system call
- * @param error tipo di uscita della system call
  * @param message messaggio di errore
  */
-void check_error(int error, char *message);
+void check_error(char *message);
 
 /**
  * @brief funzione che stampa a video il messaggio di errore

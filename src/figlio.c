@@ -54,7 +54,7 @@ void figlio(int lines, void *shm1, void *shm2){
 
     // creo la pipe per la comunicazione tra figlio e nipoti/threads
     if(pipe(pipe_descriptors) == -1){
-        check_error(-1, "FIGLIO: Creazione pipe");
+        check_error("FIGLIO: Creazione pipe");
     }
 
     // imposto il non bloccaggio in fase di lettura e scrittura nella pipe
@@ -66,18 +66,18 @@ void figlio(int lines, void *shm1, void *shm2){
 
     // creazione del semaforo
     if((sem_id = semget(KEY_SEM, 1, (0666 | IPC_CREAT | IPC_EXCL))) < 0){
-        check_error(-1, "FIGLIO: Creazione semaforo");
+        check_error("FIGLIO: Creazione semaforo");
     }
 
     // il semaforo 0 viene impostato ad 1
     sem_arg.val = 1;
     if (semctl(sem_id, 0, SETVAL, sem_arg) == -1) {    
-        check_error(-1, "FIGLIO: Inizializzazione semaforo");    
+        check_error("FIGLIO: Inizializzazione semaforo");    
     }      
 
     // viene creata la coda di messaggi
     if((msq_id = msgget(KEY_MSG, 0666 | IPC_CREAT)) < 0){        
-        check_error(-1, "FIGLIO: Accesso coda di messaggi");
+        check_error("FIGLIO: Accesso coda di messaggi");
     }
 
 
@@ -95,7 +95,7 @@ void figlio(int lines, void *shm1, void *shm2){
 
         // creazione del nipote1
         if((son_nipote1 = fork()) == -1){
-            check_error(-1, "FIGLIO: Creazione nipote1");
+            check_error("FIGLIO: Creazione nipote1");
         }
         else if(son_nipote1 == 0){
             // vengono inseriti i dati nella struttura e viene chiamato il wrapper del nipote
@@ -110,7 +110,7 @@ void figlio(int lines, void *shm1, void *shm2){
         else{
             // creazione nipote2
             if((son_nipote2 = fork()) == -1){
-                check_error(-1, "FIGLIO: Creazione nipote2");
+                check_error("FIGLIO: Creazione nipote2");
             }
             else if(son_nipote2 == 0){
                 // vengono inseriti i dati nella struttura e viene chiamato il wrapper del nipote
@@ -133,7 +133,7 @@ void figlio(int lines, void *shm1, void *shm2){
                 // viene eliminato l'array di semafori
                 sem_arg.val = 0;
                 if(semctl(sem_id, 0, IPC_RMID, sem_arg) == -1){
-                    check_error(-1, "FIGLIO: Rimozione semaforo");
+                    check_error("FIGLIO: Rimozione semaforo");
                 }  
             }
         }
@@ -166,7 +166,7 @@ void figlio(int lines, void *shm1, void *shm2){
 
             creation_return = pthread_create(&threads[counter], NULL, nipote, (void *) &param[counter]);
             if(creation_return){
-                check_error(-1, "FIGLIO: Creazione thread");
+                check_error("FIGLIO: Creazione thread");
             }
         }
 
@@ -181,7 +181,7 @@ void figlio(int lines, void *shm1, void *shm2){
         // viene eliminato l'array di semafori
         sem_arg.val = 0;
         if(semctl(sem_id, 0, IPC_RMID, sem_arg) == -1){
-            check_error(-1, "FIGLIO: Rimozione semaforo");
+            check_error("FIGLIO: Rimozione semaforo");
         }     
 
         exit(0);
@@ -204,12 +204,12 @@ void status_updated(int sig){
         // leggo dalla pipe
         while((read_line = read(pipe_descriptors[0], buffer, 512)) > 0) {
             if((write_line = write(1, buffer, read_line)) == -1){
-                check_error(-1, "FIGLIO: Scrittura su STDOUT");
+                check_error("FIGLIO: Scrittura su STDOUT");
             }
         }   
 
         if(read_line == -1){
-            check_error(-1, "FIGLIO: Lettura dalla pipe");
+            check_error("FIGLIO: Lettura dalla pipe");
         }
     }
 
@@ -229,7 +229,7 @@ void send_terminate(){
     Msg.mtype = 1;
     // invio del messaggio
     if((msgsnd(msq_id, &Msg, size, 0)) == -1){
-        check_error(-1, "FIGLIO: Invio messaggio sulla coda di messaggi");
+        check_error("FIGLIO: Invio messaggio sulla coda di messaggi");
     }
 
 }

@@ -51,7 +51,7 @@ void *nipote(void *params){
 
     // accesso alla coda di messaggi
     if((msq_id = msgget(KEY_MSG, 0666)) < 0){
-        check_error(-1, "Accesso coda di messaggi");
+        check_error("Accesso coda di messaggi");
     }
 
     // decremento del semaforo 0
@@ -78,7 +78,7 @@ void *nipote(void *params){
 
             int write_line;
             if((write_line = write(prm->pipe, messaggio, length(messaggio))) == -1){
-                check_error(-1, "NIPOTE: Scrittura nella pipe");
+                check_error("NIPOTE: Scrittura nella pipe");
             }
             
             #if CONDITION != 1
@@ -135,7 +135,7 @@ void lock(int sem_num){
 
     // decremento del semaforo
     if (semop(sem_id, &op, 1) == -1){
-        check_error(-1, "Lock semaforo");
+        check_error("Lock semaforo");
     }
 
 }
@@ -150,7 +150,7 @@ void unlock(int sem_num){
 
     // incremento del semaforo
     if (semop(sem_id, &op, 1) == -1) { 
-        check_error(-1, "Unlock semaforo");    
+        check_error("Unlock semaforo");    
     }
     
 }
@@ -249,7 +249,7 @@ void send_timeelapsed(int time) {
     Msg.mtype = 2;
     // invio del messaggio sulla coda
     if((msgsnd(msq_id, &Msg, size, 0)) == -1){
-        check_error(-1, "Invio messaggio sulla coda di messaggi");
+        check_error("Invio messaggio sulla coda di messaggi");
     }
 
     // liberazione delle zone di memoria allocate
