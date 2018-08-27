@@ -124,8 +124,8 @@ void figlio(int lines, void *shm1, void *shm2){
             }
             else{
                 // il padre attende la terminazione dei due figli
-                wait(&son_nipote1);
-                wait(&son_nipote2);
+                wait(NULL);
+                wait(NULL);
         
                 // viene mandato il messaggio "ricerca conclusa" sulla coda di messaggi
                 send_terminate();

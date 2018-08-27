@@ -117,7 +117,8 @@ void padre(char *file_name_input, char *file_name_output){
     }
     else if(son_logger == 0){
         // esecuzione di logger
-        logger();
+         logger();
+        //execl("./logger", "logger", itos(KEY_MSG), (char *)NULL);
     }
     else{
         // creazione del figlio figlio
@@ -131,8 +132,8 @@ void padre(char *file_name_input, char *file_name_output){
         else{
             
             // il padre attende la terminazione di figli
-            wait(&son_figlio);
-            wait(&son_logger);
+            wait(NULL);
+            wait(NULL);
 
             // controllo delle chiavi trovate per tutta la lunghezza del testo
             check_keys((char*)(s1 + sizeof(struct Status)), (unsigned*) s2);

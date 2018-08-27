@@ -27,6 +27,19 @@ void sig_alrm(int sig){
 
 }
 
+/*
+int main(int argc, char *argv[]){
+    if(argc != 2){
+        printing("Manca chiave");
+        exit(0);
+    }
+
+	logger(atoi(argv[1]));
+	exit(0);
+}
+*/
+
+
 void logger(){
 
     /**
